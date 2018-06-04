@@ -1,10 +1,10 @@
-package me.gerryfletcher.restapi;
+package me.gerryfletcher.restapi.config;
 
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
-class CustomConfig extends ResourceConfig {
-    CustomConfig() {
+public class CustomConfig extends ResourceConfig {
+    public CustomConfig() {
         property(LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_SERVER, "INFO");
         packages("me.gerryfletcher.restapi");
     }
