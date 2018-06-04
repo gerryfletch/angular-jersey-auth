@@ -2,6 +2,7 @@ package me.gerryfletcher.restapi.resources;
 
 import me.gerryfletcher.restapi.authentication.Role;
 
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -19,10 +20,10 @@ public class MessageResource {
      * @return The public message to anyone who wants it.
      */
     @GET
-    @RolesAllowed(Role.PUBLIC)
+    @PermitAll
     @Path("public")
-    public Response getPublicMessage() {
-        return Response.ok().entity(publicMessage).build();
+    public String getPublicMessage() {
+        return publicMessage;
     }
 
     /**
@@ -31,8 +32,8 @@ public class MessageResource {
     @GET
     @RolesAllowed(Role.USER)
     @Path("private")
-    public Response getPrivateMessage() {
-        return Response.ok().entity(privateMessage).build();
+    public String getPrivateMessage() {
+        return privateMessage;
     }
 
     /**
@@ -50,8 +51,8 @@ public class MessageResource {
                     .entity("You must specify a non-empty message.")
                     .build();
         }
+
         publicMessage = message;
         return Response.ok().build();
     }
-
 }

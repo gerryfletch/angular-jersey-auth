@@ -1,5 +1,6 @@
 package me.gerryfletcher.restapi;
 
+import me.gerryfletcher.restapi.config.CustomConfig;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 
