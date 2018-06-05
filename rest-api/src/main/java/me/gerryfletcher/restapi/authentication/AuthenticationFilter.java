@@ -3,9 +3,11 @@ package me.gerryfletcher.restapi.authentication;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import me.gerryfletcher.restapi.exceptions.AuthenticationException;
 
+import javax.annotation.Priority;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
@@ -13,22 +15,22 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
+@Priority(Priorities.AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
 
     private static final String AUTHORIZATION_PROPERTY = "Authorization";
-    private static final String AUTHORIZATION_TYPE     = "Bearer";
-
-    private static final Response UNAUTHORIZED = Response.status(Response.Status.UNAUTHORIZED).build();
-    private static final Response FORBIDDEN    = Response.status(Response.Status.FORBIDDEN).build();
+    private static final String AUTHORIZATION_TYPE     = "BEARER";
 
     private static final TokenService tokenService = new TokenService();
 
     @Context
     private ResourceInfo resourceInfo;
 
+    /**
+     * Authenticates and filters incoming requests.
+     * @param requestContext The request.
+     */
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
 
@@ -37,53 +39,65 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         if (method.isAnnotationPresent(PermitAll.class)) {
             return;
         } else if (method.isAnnotationPresent(DenyAll.class)) {
-            requestContext.abortWith(FORBIDDEN);
+            forbidden(requestContext );
             return;
         }
 
-        List<String> authHeader = requestContext.getHeaders().getOrDefault(AUTHORIZATION_PROPERTY, new ArrayList<>());
+        String auth = requestContext.getHeaderString(AUTHORIZATION_PROPERTY);
 
-        // Validate token and check its role against end point annotation.
         try {
-            DecodedJWT token = tokenService.getDecodedJWT(getToken(authHeader));
-            String role = token.getClaim("role").asString();
+            DecodedJWT token = tokenService.getDecodedJWT(getToken(auth));
+            String[] roles = method.getAnnotation(RolesAllowed.class).value();
 
-            String[] annotationRoles = method.getAnnotation(RolesAllowed.class).value();
-
-            for (String annotationRole: annotationRoles) {
-
-                // The users role matches the allowed roles.
-                if (annotationRole.equalsIgnoreCase(role)) {
-                    return;
-                }
+            if (! tokenIsValidRole(token, roles)) {
+                forbidden(requestContext);
             }
 
         } catch (AuthenticationException e) {
-            requestContext.abortWith(UNAUTHORIZED);
+            unauthorized(requestContext, e.getMessage());
         }
 
     }
 
-    private String getToken(List<String> authHeader) throws AuthenticationException {
-        // If there is no authorization present; block access.
-        if (authHeader.isEmpty()) {
-            throw new AuthenticationException("No authorization provided.");
+    /**
+     * Checks for Bearer authentication before returning the token.
+     * @param authHeader Header in the form "Bearer xxx.yyy.zzz".
+     * @return The token part of the header.
+     * @throws AuthenticationException If there is no bearer auth type.
+     */
+    private String getToken(String authHeader) throws AuthenticationException {
+        if (authHeader == null || authHeader.isEmpty()) throw new AuthenticationException("No auth provided.");
+        // Check that it is bearer auth.
+        if (! authHeader.toUpperCase().startsWith(AUTHORIZATION_TYPE)) {
+            throw new AuthenticationException("Incorrect authorization type.");
         }
 
-        String[] authMakeup = authHeader.get(0).split(" ");
+        return authHeader.split(" ")[1];
+    }
 
-        if (authMakeup.length != 2) {
-            throw new AuthenticationException("Invalid authorization syntax.");
-        }
+    /**
+     * @return True if a tokens role is permitted.
+     */
+    private boolean tokenIsValidRole(DecodedJWT token, String[] permittedRoles) {
+        String userRole = token.getClaim("role").asString();
+        for (String role: permittedRoles) if (role.equals(userRole)) return true;
+        return false;
+    }
 
-        String authType = authMakeup[0];
-        String token = authMakeup[1];
+    /**
+     * Set the context to abort with 401 Unauthorized.
+     */
+    private void unauthorized(ContainerRequestContext context, String message) {
+        context.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity(message).build());
+    }
 
-        if (! authType.equals(AUTHORIZATION_TYPE)) {
-            throw new AuthenticationException("Incorrect form of authorization.");
-        }
-
-        return token;
+    /**
+     * Set the context to abort with 403 Forbidden.
+     */
+    private void forbidden(ContainerRequestContext context) {
+        context.abortWith(Response.status(Response.Status.FORBIDDEN)
+                .entity("You can't access this resource :(")
+                .build());
     }
 
 }
