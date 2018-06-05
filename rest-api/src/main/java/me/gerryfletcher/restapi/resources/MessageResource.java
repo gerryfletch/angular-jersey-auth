@@ -37,7 +37,7 @@ public class MessageResource {
     }
 
     /**
-     * Update the public message. This method will only execute if you are an admin.
+     * Update the public message. Only admins can do this.
      *
      * @param message The new message.
      * @return 200 OK for a non-empty message, 400 bad request otherwise.
@@ -53,6 +53,6 @@ public class MessageResource {
         }
 
         publicMessage = message;
-        return Response.ok().build();
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
 }

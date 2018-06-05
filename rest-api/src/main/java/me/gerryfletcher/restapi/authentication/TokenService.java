@@ -7,6 +7,7 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import me.gerryfletcher.restapi.exceptions.AuthenticationException;
+import me.gerryfletcher.restapi.models.AuthTokens;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
@@ -18,7 +19,7 @@ public class TokenService {
     private static Algorithm algorithm;
     private static JWTVerifier verifier;
 
-    TokenService() {
+    public TokenService() {
         try {
             algorithm = Algorithm.HMAC256(secret);
             verifier = JWT.require(algorithm)
@@ -35,7 +36,7 @@ public class TokenService {
      * @return The verified and decoded token.
      * @throws AuthenticationException If the token is invalid.
      */
-    public DecodedJWT getDecodedJWT(String token) throws AuthenticationException {
+    DecodedJWT getDecodedJWT(String token) throws AuthenticationException {
         try {
             return verifier.verify(token);
         } catch (JWTVerificationException exception) {
@@ -44,23 +45,40 @@ public class TokenService {
     }
 
     /**
-     * @param uid   The user whom this is for.
+     * @param username The user whom this is for.
      * @param role  The role this user holds.
-     * @return  A valid JSON Web Token.
-     * @throws AuthenticationException
+     * @return  A valid access token.
+     * @throws JWTCreationException If the signature configuration is invalid.
      */
-    public String createAccessToken(int uid, String role) throws AuthenticationException {
-        try {
-            return JWT.create()
-                    .withIssuer("auth0")
-                    .withClaim("uid", uid)
-                    .withClaim("role", role)
-                    .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(7)))
-                    .sign(algorithm);
-        } catch (JWTCreationException exception) {
-            throw new AuthenticationException("Invalid signature configuration.");
-        }
+    String createAccessToken(String username, String role) throws JWTCreationException {
+        return JWT.create()
+                .withIssuer("auth0")
+                .withClaim("username", username)
+                .withClaim("role", role)
+                .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(7)))
+                .sign(algorithm);
     }
 
+    /**
+     * Create a refresh token with an expiration date of one year.
+     * This means that a secure user with the refresh token can retrieve an access token for up to a year.
+     * @param username The user whom this is for.
+     * @return A valid refresh token.
+     * @throws JWTCreationException If the signature configuration is invalid.
+     */
+    String createRefreshToken(String username) throws JWTCreationException {
+        return JWT.create()
+                .withIssuer("auth0")
+                .withClaim("username", username)
+                .withClaim("role", Role.REFRESH)
+                .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365)))
+                .sign(algorithm);
+    }
+
+    AuthTokens createAuthTokens(String username, String role) throws JWTCreationException {
+        String accessToken = createAccessToken(username, role);
+        String refreshToken = createRefreshToken(username);
+        return new AuthTokens(refreshToken, accessToken);
+    }
 
 }
