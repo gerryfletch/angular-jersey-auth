@@ -1,4 +1,4 @@
-package me.gerryfletcher.restapi.resources;
+package me.gerryfletcher.restapi.endpoints;
 
 import me.gerryfletcher.restapi.authentication.Role;
 
