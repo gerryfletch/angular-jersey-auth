@@ -5,15 +5,12 @@ import me.gerryfletcher.restapi.exceptions.AuthenticationException;
 import me.gerryfletcher.restapi.exceptions.InvalidLoginException;
 import me.gerryfletcher.restapi.models.AuthTokens;
 
-import javax.inject.Inject;
-
-public class LoginService {
+public class AuthenticationService {
 
     private TokenService tokenService;
 
-    @Inject
-    public LoginService(TokenService tokenService) {
-        this.tokenService = tokenService;
+    public AuthenticationService() {
+        this.tokenService = new TokenService();
     }
 
     /**
@@ -34,5 +31,8 @@ public class LoginService {
         }
     }
 
+    public AuthTokens refreshTokens(String username, String role) throws JWTCreationException {
+        return tokenService.createAuthTokens(username, role);
+    }
 
 }

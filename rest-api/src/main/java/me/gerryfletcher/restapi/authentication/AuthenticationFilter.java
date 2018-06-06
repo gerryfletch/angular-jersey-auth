@@ -2,6 +2,7 @@ package me.gerryfletcher.restapi.authentication;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import me.gerryfletcher.restapi.exceptions.AuthenticationException;
+import me.gerryfletcher.restapi.models.User;
 
 import javax.annotation.Priority;
 import javax.annotation.security.DenyAll;
@@ -48,12 +49,20 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
         try {
             DecodedJWT token = tokenService.getDecodedJWT(getToken(auth));
-            String[] roles = method.getAnnotation(RolesAllowed.class).value();
 
-            if (! tokenIsValidRole(token, roles)) {
-                forbidden(requestContext);
-            }
+            String scheme = requestContext.getUriInfo().getRequestUri().getScheme();
+            String username = token.getClaim("username").asString();
+            String role = token.getClaim("role").asString();
 
+            User user = new User(username, role);
+
+//            String[] roles = method.getAnnotation(RolesAllowed.class).value();
+
+//            if (! tokenIsValidRole(role, roles)) {
+//                forbidden(requestContext);
+//            }
+
+            requestContext.setSecurityContext(new UserSecurityContext(user, scheme));
         } catch (AuthenticationException e) {
             unauthorized(requestContext, e.getMessage());
         }
@@ -79,8 +88,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     /**
      * @return True if a tokens role is permitted.
      */
-    private boolean tokenIsValidRole(DecodedJWT token, String[] permittedRoles) {
-        String userRole = token.getClaim("role").asString();
+    private boolean tokenIsValidRole(String userRole, String[] permittedRoles) {
         for (String role: permittedRoles) if (role.equals(userRole)) return true;
         return false;
     }
