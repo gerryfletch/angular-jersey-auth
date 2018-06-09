@@ -47,8 +47,8 @@ public class AuthenticationResource {
 
     private JsonObject formResponse(AuthTokens authTokens) throws JWTCreationException {
         JsonObject result = new JsonObject();
-        result.addProperty("access-token", authTokens.getAccessToken());
-        result.addProperty("refresh-token", authTokens.getRefreshToken());
+        result.addProperty("access_token", authTokens.getAccessToken());
+        result.addProperty("refresh_token", authTokens.getRefreshToken());
         return result;
     }
 

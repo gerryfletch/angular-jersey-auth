@@ -40,7 +40,7 @@ public class MessageResource {
      * Update the public message. Only admins can do this.
      *
      * @param message The new message.
-     * @return 200 OK for a non-empty message, 400 bad request otherwise.
+     * @return 204 OK for a non-empty message, 400 bad request otherwise.
      */
     @PUT
     @RolesAllowed(Role.ADMIN)
