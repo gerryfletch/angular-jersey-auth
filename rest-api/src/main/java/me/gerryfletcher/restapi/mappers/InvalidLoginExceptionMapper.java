@@ -16,6 +16,7 @@ public class InvalidLoginExceptionMapper implements ExceptionMapper<InvalidLogin
     public Response toResponse(InvalidLoginException e) {
         return Response
                 .status(Response.Status.BAD_REQUEST)
+                .entity(e.getMessage())
                 .build();
     }
 }
