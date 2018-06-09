@@ -1,0 +1,12 @@
+<form *ngIf="! isLogged">
+  <h1>Login</h1>
+  <hr>
+  <input type="text" [(ngModel)]="username" name="username" placeholder="username" required/>
+  <input type="password" [(ngModel)]="password" name="password" placeholder="password" required/>
+  <footer>
+    <div class="error">
+      <h2 *ngIf="isError">{{error}}</h2>
+    </div>
+    <button type="button" (click)="login()">Login</button>
+  </footer>
+</form>
