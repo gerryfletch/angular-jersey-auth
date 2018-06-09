@@ -25,12 +25,14 @@ export class LoginComponent implements OnInit {
 
   login() {
     if (!this.username || !this.password) {
+      this.isError = true;
+      this.error = 'Enter a username and password.';
       return;
     }
 
     this.authService.login(this.username, this.password)
       .subscribe(
-        val => {
+        _ => {
           this.isError = false;
           this.error = '';
           this.isLogged = true;

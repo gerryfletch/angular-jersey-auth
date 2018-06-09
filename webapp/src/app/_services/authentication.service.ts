@@ -17,20 +17,21 @@ export class AuthenticationService {
     return this.tokenService.isLoggedIn();
   }
 
-  login(username: string, password: string): Observable<boolean> {
+  login(username: string, password: string): Observable<void> {
     const body = new HttpParams()
       .set('username', username)
       .set('password', password);
 
-    return this.http.post<Tokens>('/api/auth/login', body.toString(),
-      {
-        headers: new HttpHeaders()
-          .set('Content-Type', 'application/x-www-form-urlencoded')
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type':  'application/x-www-form-urlencoded'
       })
+    };
+
+    return this.http.post<Tokens>('/api/auth/login', body.toString(), httpOptions)
       .pipe(
         map(tokens => {
           this.tokenService.setTokens(tokens.refresh_token, tokens.access_token);
-          return true;
         }),
         catchError(this.handleLoginError)
       );
