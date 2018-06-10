@@ -36,4 +36,8 @@ export class TokenService {
     localStorage.setItem(this.ACCESS_KEY, accessToken);
   }
 
+
+  clearTokens() {
+    localStorage.clear();
+  }
 }
