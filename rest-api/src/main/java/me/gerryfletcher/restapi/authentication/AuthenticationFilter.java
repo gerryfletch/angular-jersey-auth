@@ -21,8 +21,8 @@ import java.lang.reflect.Method;
 @Priority(Priorities.AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
 
-    private static final String AUTHORIZATION_PROPERTY = "Authorization";
-    private static final String AUTHORIZATION_TYPE     = "BEARER";
+    private static final String AUTHORIZATION_PROPERTY = "authorization";
+    private static final String AUTHORIZATION_TYPE     = "Bearer";
 
     private static final TokenService tokenService = new TokenService();
 
@@ -46,6 +46,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         }
 
         String auth = requestContext.getHeaderString(AUTHORIZATION_PROPERTY);
+
+        System.out.println(auth);
 
         try {
             DecodedJWT token = tokenService.getDecodedJWT(getToken(auth));
@@ -78,7 +80,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     private String getToken(String authHeader) throws AuthenticationException {
         if (authHeader == null || authHeader.isEmpty()) throw new AuthenticationException("No auth provided.");
         // Check that it is bearer auth.
-        if (! authHeader.toUpperCase().startsWith(AUTHORIZATION_TYPE)) {
+        if (! authHeader.toUpperCase().startsWith(AUTHORIZATION_TYPE.toUpperCase())) {
             throw new AuthenticationException("Incorrect authorization type.");
         }
 
