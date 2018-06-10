@@ -37,8 +37,35 @@ export class AuthenticationService {
       );
   }
 
-  handleLoginError(error: HttpErrorResponse) {
+  private handleLoginError(error: HttpErrorResponse) {
     return throwError(error.error || 'There\'s something wrong with our servers.');
+  }
+
+  logout() {
+    this.tokenService.clearTokens();
+  }
+
+  /**
+   * Makes a white-listed request to the refresh end point with the refresh token.
+   * A new refresh-access token pair is returned, or an error is thrown.
+   * @returns {Observable<Tokens>}  A new valid refresh-access token pair.
+   */
+  refreshTokens(): Observable<Tokens> {
+    const header = 'Bearer ' + this.tokenService.getRefreshToken();
+
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Authorization': header
+      })
+    };
+
+    return this.http.get<Tokens>('/api/auth/refresh', httpOptions)
+      .pipe(
+        map((tokens: Tokens) => {
+          this.tokenService.setTokens(tokens.refresh_token, tokens.access_token);
+          return tokens;
+        })
+      );
   }
 
 }
