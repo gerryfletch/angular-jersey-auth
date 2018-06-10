@@ -6,6 +6,7 @@ import { MessageComponent } from './components/message/message.component';
 import {HttpClientModule} from '@angular/common/http';
 import { LoginComponent } from './components/login/login.component';
 import {FormsModule} from '@angular/forms';
+import {httpInterceptorProviders} from './_interceptors/interceptors';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,7 @@ import {FormsModule} from '@angular/forms';
     HttpClientModule,
     FormsModule
   ],
-  providers: [],
+  providers: [httpInterceptorProviders],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
