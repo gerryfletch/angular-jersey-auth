@@ -1,21 +1,21 @@
 import {Injectable} from '@angular/core';
 import {HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
 
-import {EMPTY, Observable, throwError} from 'rxjs';
+import {EMPTY, Observable, Subject, throwError} from 'rxjs';
 import {TokenService} from '../_services/token.service';
 import {AuthenticationService} from '../_services/authentication.service';
-import {catchError} from 'rxjs/internal/operators';
+import {catchError, map, mergeMap} from 'rxjs/internal/operators';
 
 /** Pass untouched request through to the next request handler. */
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
 
-  private isRefreshing;
-  private cachedRequests: HttpRequest<any>[];
+  private requests$: Observable<HttpEvent<any>>;
+  private requests: Subject<HttpEvent<any>>;
 
   constructor(private tokenService: TokenService, private authService: AuthenticationService) {
-    this.isRefreshing = false;
-    this.cachedRequests = [];
+    this.requests = new Subject<HttpEvent<any>>();
+    this.requests$ = this.requests.asObservable();
   }
 
   createAuthRequest(req: HttpRequest<any>): HttpRequest<any> {
@@ -25,6 +25,8 @@ export class AuthInterceptor implements HttpInterceptor {
   }
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    console.log('Attempting request: ');
+    console.log(req);
     if (req.url === '/api/auth/refresh') {
       return next.handle(req);
     }
@@ -36,54 +38,31 @@ export class AuthInterceptor implements HttpInterceptor {
       catchError((err: HttpErrorResponse) => {
         // attempt to refresh
         if (err.status === 401) {
-          this.cachedRequests.push(req);
-          if (this.isRefreshing) {
-            return;
-          }
-
-          this.isRefreshing = true;
-
           this.authService.refreshTokens()
             .subscribe(
               () => {
                 // the tokens have been refreshed, reattempt request.
-                for (const request of this.cachedRequests) {
-                  next.handle(request);
-                }
-
-                this.isRefreshing = false;
-                this.cachedRequests = [];
+                console.log('The tokens have been refreshed. Retrying request: ');
+                console.log(req);
+                next.handle(req).subscribe(
+                  res => {
+                    this.requests.next(res);
+                    this.requests.complete();
+                  }
+                );
               },
-              () => {
+              (e) => {
                 this.authService.logout();
-                return EMPTY;
+                this.requests.next(e);
+                this.requests.complete();
+                // return EMPTY;
               }
             );
         }
 
-        return throwError('You don\'t have permission for this.');
+        return this.requests;
       })
     );
   }
-
-  // refreshToken() {
-  //   if (this.refreshInProgress) {
-  //     return new Observable(observer => {
-  //       this.tokenRefreshed$.subscribe(() => {
-  //         observer.next();
-  //         observer.complete();
-  //       });
-  //     });
-  //   } else {
-  //     this.refreshInProgress = true;
-  //
-  //     return this.authService.refreshTokens().pipe(
-  //       map(() => {
-  //         this.refreshInProgress = false;
-  //         this.tokenRefreshedSource.next();
-  //       })
-  //     );
-  //   }
-  // }
 
 }
