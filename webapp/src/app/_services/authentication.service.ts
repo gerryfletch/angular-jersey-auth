@@ -10,7 +10,10 @@ import {catchError, map} from 'rxjs/internal/operators';
 })
 export class AuthenticationService {
 
+  private authReqHandler: Observable<Tokens>;
+
   constructor(private http: HttpClient, private tokenService: TokenService) {
+    this.authReqHandler = null;
   }
 
   isLoggedIn(): boolean {
@@ -51,6 +54,11 @@ export class AuthenticationService {
    * @returns {Observable<Tokens>}  A new valid refresh-access token pair.
    */
   refreshTokens(): Observable<Tokens> {
+
+    if (!! this.authReqHandler) {
+      return this.authReqHandler;
+    }
+
     const header = 'Bearer ' + this.tokenService.getRefreshToken();
 
     const httpOptions = {
@@ -59,13 +67,16 @@ export class AuthenticationService {
       })
     };
 
-    return this.http.get<Tokens>('/api/auth/refresh', httpOptions)
+    this.authReqHandler = this.http.get<Tokens>('/api/auth/refresh', httpOptions)
       .pipe(
         map((tokens: Tokens) => {
+          // console.log(tokens);
           this.tokenService.setTokens(tokens.refresh_token, tokens.access_token);
           return tokens;
         })
       );
+
+    return this.authReqHandler;
   }
 
 }
