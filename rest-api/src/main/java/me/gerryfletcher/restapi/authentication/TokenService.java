@@ -55,7 +55,8 @@ public class TokenService {
                 .withIssuer("auth0")
                 .withClaim("username", username)
                 .withClaim("role", role)
-                .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(7)))
+//                .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(7)))
+                .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(1)))
                 .sign(algorithm);
     }
 

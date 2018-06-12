@@ -1,89 +1,80 @@
 import {Injectable} from '@angular/core';
 import {HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
 
-import {EMPTY, Observable, throwError} from 'rxjs';
+import {Observable, throwError} from 'rxjs';
 import {TokenService} from '../_services/token.service';
 import {AuthenticationService} from '../_services/authentication.service';
-import {catchError} from 'rxjs/internal/operators';
+import {catchError, switchMap} from 'rxjs/internal/operators';
+import {AppSettings} from './AppSettings';
 
 /** Pass untouched request through to the next request handler. */
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
 
-  private isRefreshing;
-  private cachedRequests: HttpRequest<any>[];
+  private WHITELIST: Set<string>;
 
   constructor(private tokenService: TokenService, private authService: AuthenticationService) {
-    this.isRefreshing = false;
-    this.cachedRequests = [];
+    this.WHITELIST = AppSettings.HTTP_WHITELIST;
   }
 
+  /**
+   * @returns {HttpRequest<any>} A cloned http request with the authorization appended.
+   */
   createAuthRequest(req: HttpRequest<any>): HttpRequest<any> {
     return req.clone({
       headers: req.headers.set('Authorization', 'Bearer ' + this.tokenService.getAccessToken())
     });
   }
 
+  /**
+   * Intercept different life cycles of a http request.
+   * Authentication is added to all requests unless they belong to the AppSettings whitelist.
+   * If a 401 unauthorized response is returned, the auth service attempts to refresh the token.
+   * On success, the request will be resent and its response returned. On failure, the user will be logged out
+   * and an error returned.
+   * @param {HttpRequest<any>} req The http request to process.
+   * @param {HttpHandler} next The next handler in the interceptor barrel.
+   */
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    if (req.url === '/api/auth/refresh') {
+    if (this.WHITELIST.has(req.url)) {
       return next.handle(req);
     }
 
-    // Add auth
     const authReq = this.createAuthRequest(req);
 
     return next.handle(authReq).pipe(
       catchError((err: HttpErrorResponse) => {
-        // attempt to refresh
-        if (err.status === 401) {
-          this.cachedRequests.push(req);
-          if (this.isRefreshing) {
-            return;
-          }
-
-          this.isRefreshing = true;
-
-          this.authService.refreshTokens()
-            .subscribe(
-              () => {
-                // the tokens have been refreshed, reattempt request.
-                for (const request of this.cachedRequests) {
-                  next.handle(request);
-                }
-
-                this.isRefreshing = false;
-                this.cachedRequests = [];
-              },
-              () => {
-                this.authService.logout();
-                return EMPTY;
-              }
-            );
+        // Check if the response is unauthorized.
+        if (err.status !== 401) {
+          return throwError(err);
         }
 
-        return throwError('You don\'t have permission for this.');
+        // New tokens are required. Refresh and get the authenticated response or error.
+        return this.refreshAndRetry(req, next);
       })
     );
   }
 
-  // refreshToken() {
-  //   if (this.refreshInProgress) {
-  //     return new Observable(observer => {
-  //       this.tokenRefreshed$.subscribe(() => {
-  //         observer.next();
-  //         observer.complete();
-  //       });
-  //     });
-  //   } else {
-  //     this.refreshInProgress = true;
-  //
-  //     return this.authService.refreshTokens().pipe(
-  //       map(() => {
-  //         this.refreshInProgress = false;
-  //         this.tokenRefreshedSource.next();
-  //       })
-  //     );
-  //   }
-  // }
+  /**
+   * Attempt to refresh our tokens. If authentication is successful, repeat the failed request and return
+   * its observable. Otherwise, log the user out and throw the error response.
+   * @param req The original (failed) request to be retried after authentication.
+   * @param next The next http handler in the interceptor barrel.
+   * @returns {Observable<any>} Either the http response or an error.
+   */
+  private refreshAndRetry(req, next): Observable<any> {
+    return this.authService.refreshTokens().pipe(
+      switchMap(() => {
+        return next.handle(this.createAuthRequest(req));
+      }),
+      catchError((e: HttpErrorResponse) => {
+        // The token refresh was unauthorized, so log them out.
+        if (e.status === 401) {
+          this.authService.logout();
+        }
+        return throwError(e);
+      })
+    );
+  }
 
 }

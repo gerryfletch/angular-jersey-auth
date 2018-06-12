@@ -1,9 +1,9 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpErrorResponse, HttpHeaders, HttpParams} from '@angular/common/http';
-import {Observable, of, throwError} from 'rxjs/index';
+import {Observable, throwError} from 'rxjs/index';
 import {Tokens} from '../_models/tokens.model';
 import {TokenService} from './token.service';
-import {catchError, map} from 'rxjs/internal/operators';
+import {catchError, tap} from 'rxjs/internal/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +20,11 @@ export class AuthenticationService {
     return this.tokenService.isLoggedIn();
   }
 
-  login(username: string, password: string): Observable<void> {
+  /**
+   * Construct an encoded form and post it to login. On a successful request, store the tokens. On unsuccessful,
+   * throw an error.
+   */
+  login(username: string, password: string): Observable<Tokens> {
     const body = new HttpParams()
       .set('username', username)
       .set('password', password);
@@ -33,8 +37,8 @@ export class AuthenticationService {
 
     return this.http.post<Tokens>('/api/auth/login', body.toString(), httpOptions)
       .pipe(
-        map(tokens => {
-          this.tokenService.setTokens(tokens.refresh_token, tokens.access_token);
+        tap((tokens: Tokens) => {
+          this.tokenService.setTokens(tokens);
         }),
         catchError(this.handleLoginError)
       );
@@ -69,10 +73,8 @@ export class AuthenticationService {
 
     this.authReqHandler = this.http.get<Tokens>('/api/auth/refresh', httpOptions)
       .pipe(
-        map((tokens: Tokens) => {
-          // console.log(tokens);
-          this.tokenService.setTokens(tokens.refresh_token, tokens.access_token);
-          return tokens;
+        tap((tokens: Tokens) => {
+          this.tokenService.setTokens(tokens);
         })
       );
 
