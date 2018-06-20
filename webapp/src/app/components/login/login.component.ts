@@ -17,6 +17,9 @@ export class LoginComponent implements OnInit {
   error: string;
 
   constructor(private authService: AuthenticationService) {
+    this.error = '';
+    this.username = '';
+    this.password = '';
   }
 
   ngOnInit() {
@@ -24,9 +27,15 @@ export class LoginComponent implements OnInit {
   }
 
   login() {
-    if (!this.username || !this.password) {
+    if (! this.username || ! this.password) {
       this.isError = true;
-      this.error = 'Enter a username and password.';
+      if (!this.username && ! this.password) {
+        this.error = 'Enter a username and password.';
+      } else if (!this.username) {
+        this.error = 'Enter a username.';
+      } else {
+        this.error = 'Enter a password.';
+      }
       return;
     }
 
