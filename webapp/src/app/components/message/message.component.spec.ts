@@ -12,7 +12,7 @@ class MessageServiceStub {
   }
 }
 
-fdescribe('MessageComponent', () => {
+describe('MessageComponent', () => {
   let component: MessageComponent;
   let fixture: ComponentFixture<MessageComponent>;
 
