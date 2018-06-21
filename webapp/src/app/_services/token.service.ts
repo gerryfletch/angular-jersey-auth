@@ -11,18 +11,11 @@ export class TokenService {
   private REFRESH_KEY = 'refresh_token';
   private ACCESS_KEY =  'access_token';
 
-  private jwtHelper: JwtHelperService;
-
   constructor() {
-    this.jwtHelper = new JwtHelperService();
   }
 
   isLoggedIn(): boolean {
     return localStorage.getItem(this.REFRESH_KEY) !== null;
-  }
-
-  isExpired(): boolean {
-    return this.jwtHelper.isTokenExpired(this.getAccessToken());
   }
 
   getRefreshToken(): string {
