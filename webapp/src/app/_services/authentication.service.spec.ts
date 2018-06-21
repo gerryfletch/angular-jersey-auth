@@ -84,6 +84,22 @@ describe('AuthenticationService', () => {
       req.flush(mockTokens);
     });
 
+    it('should not store the tokens on invalid login', () => {
+      const tokenSpy = spyOn(tokenService, 'setTokens');
+
+      service.login(username, password).subscribe(() => {}, () => {
+        expect(tokenSpy).not.toHaveBeenCalled();
+      });
+
+      // Mock successful HTTP request
+      const req = httpMock.expectOne(loginApi);
+      expect(req.request.method).toBe('POST');
+      const mockErrorResponse = {
+        status: 400, statusText: 'You aren\'t authorized to access this resource.'
+      };
+      req.flush(null, mockErrorResponse);
+    });
+
     it('should throw an error with bad credentials', () => {
       const error = 'Invalid username or password.';
       service.login(username, password).subscribe(() => {
