@@ -1,6 +1,4 @@
-import { Injectable } from '@angular/core';
-import { JwtHelperService } from '@auth0/angular-jwt';
-import {Observable, of} from 'rxjs/index';
+import {Injectable} from '@angular/core';
 import {Tokens} from '../_models/tokens.model';
 
 @Injectable({
@@ -9,7 +7,7 @@ import {Tokens} from '../_models/tokens.model';
 export class TokenService {
 
   private REFRESH_KEY = 'refresh_token';
-  private ACCESS_KEY =  'access_token';
+  private ACCESS_KEY = 'access_token';
 
   constructor() {
   }
