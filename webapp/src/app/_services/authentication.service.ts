@@ -21,8 +21,7 @@ export class AuthenticationService {
   }
 
   /**
-   * Construct an encoded form and post it to login. On a successful request, store the tokens. On unsuccessful,
-   * throw an error.
+   * Construct an encoded form and post it to the backend auth.
    */
   login(username: string, password: string): Observable<Tokens> {
     const body = new HttpParams()
@@ -55,10 +54,13 @@ export class AuthenticationService {
   /**
    * Makes a white-listed request to the refresh end point with the refresh token.
    * A new refresh-access token pair is returned, or an error is thrown.
+   *
+   * To prevent multiple concurrent requests to refresh tokens, we store an observable
+   * of tokens, 'authReqHandler'. The initial http request is assigned to this observable,
+   * and it is returned to any subsequent requests.
    * @returns {Observable<Tokens>}  A new valid refresh-access token pair.
    */
   refreshTokens(): Observable<Tokens> {
-
     if (!! this.authReqHandler) {
       return this.authReqHandler;
     }
