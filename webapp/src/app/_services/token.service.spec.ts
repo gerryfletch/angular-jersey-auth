@@ -5,7 +5,7 @@ import Spy = jasmine.Spy;
 /**
  * I'm not sure of the best way to test the local storage getting and setting.
  */
-fdescribe('TokenService', () => {
+describe('TokenService', () => {
 
   let localStorageGetSpy: Spy;
   let localStorageSetSpy: Spy;
