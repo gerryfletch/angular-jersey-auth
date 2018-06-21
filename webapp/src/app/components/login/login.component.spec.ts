@@ -1,11 +1,11 @@
-import {async, ComponentFixture, TestBed, tick} from '@angular/core/testing';
+import {async, ComponentFixture, TestBed} from '@angular/core/testing';
 
 import {LoginComponent} from './login.component';
 import {AuthenticationService} from '../../_services/authentication.service';
 import {FormsModule} from '@angular/forms';
 import {By} from '@angular/platform-browser';
 import {DebugElement} from '@angular/core';
-import {EMPTY, of} from 'rxjs';
+import {EMPTY, of, throwError} from 'rxjs';
 
 class AuthenticationServiceStub {
   isLoggedIn() {
@@ -39,7 +39,7 @@ describe('LoginComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  fdescribe('The user is not logged in', () => {
+  describe('The user is not logged in', () => {
 
     /**
      * Set the service to return that the user is logged out.
@@ -198,7 +198,7 @@ describe('LoginComponent', () => {
         });
 
         it('should have no errors after being in an error state', () => {
-          spyOn(TestBed.get(AuthenticationService), 'login').and.returnValue(of ({}));
+          spyOn(TestBed.get(AuthenticationService), 'login').and.returnValue(of({}));
           component.isError = true;
           component.error = 'Test error.';
           component.username = 'test';
@@ -210,6 +210,52 @@ describe('LoginComponent', () => {
           expect(component.error).toBe('');
         });
 
+        it('should hide the form after a successful login', () => {
+          spyOn(TestBed.get(AuthenticationService), 'login').and.returnValue(of({}));
+          usernameInput.value = 'test';
+          passwordInput.value = 'testing';
+
+          usernameInput.dispatchEvent(new Event('input'));
+          passwordInput.dispatchEvent(new Event('input'));
+          loginButton.triggerEventHandler('click', null);
+          fixture.detectChanges();
+
+          const form = fixture.debugElement.query(By.css('form'));
+          expect(form).toBeFalsy();
+        });
+      });
+
+      describe('With incorrect credentials', () => {
+        // Unit
+        it('should error', () => {
+          const error = 'Bad username or password.';
+          spyOn(TestBed.get(AuthenticationService), 'login').and.returnValue(throwError(error));
+          component.username = 'test';
+          component.password = 'testing';
+
+          component.login();
+
+          expect(component.isError).toBeTruthy();
+          expect(component.error).toContain(error);
+        });
+        // Integration
+        it('should show an error', () => {
+          const error = 'Bad username or password.';
+          spyOn(TestBed.get(AuthenticationService), 'login').and.returnValue(throwError(error));
+          usernameInput.value = 'test';
+          passwordInput.value = 'testing';
+
+          usernameInput.dispatchEvent(new Event('input'));
+          passwordInput.dispatchEvent(new Event('input'));
+          loginButton.triggerEventHandler('click', null);
+          fixture.detectChanges();
+
+          const errorDE = getErrorDE();
+          const errorEl: HTMLElement = errorDE.nativeElement;
+
+          expect(errorDE).toBeTruthy();
+          expect(errorEl.innerText).toContain(error);
+        });
       });
 
     });
@@ -237,9 +283,9 @@ describe('LoginComponent', () => {
     });
 
     it('should not display the login form', () => {
-      const de = fixture.debugElement.query(By.css('form'));
+      const form = fixture.debugElement.query(By.css('form'));
 
-      expect(de).toBeFalsy();
+      expect(form).toBeFalsy();
     });
 
   });
