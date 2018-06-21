@@ -5,7 +5,7 @@ import {Observable, throwError} from 'rxjs';
 import {TokenService} from '../_services/token.service';
 import {AuthenticationService} from '../_services/authentication.service';
 import {catchError, switchMap} from 'rxjs/internal/operators';
-import {AppSettings} from './AppSettings';
+import {AppSettings} from '../AppSettings';
 
 /** Pass untouched request through to the next request handler. */
 @Injectable()
