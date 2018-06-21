@@ -3,12 +3,18 @@ import {getTestBed, TestBed} from '@angular/core/testing';
 import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
 import {Tokens} from '../_models/tokens.model';
 import {TokenService} from './token.service';
+import {Observable, of, Subject} from 'rxjs';
+import {HttpClient} from '@angular/common/http';
 
 describe('AuthenticationService', () => {
 
   let injector: TestBed;
   let service: AuthenticationService;
+  let tokenService: TokenService;
   let httpMock: HttpTestingController;
+
+  const username = 'test';
+  const password = 'test';
 
   const mockTokens = {
     refresh_token: 'xxx.yyy.zzz',
@@ -23,6 +29,7 @@ describe('AuthenticationService', () => {
 
     injector = getTestBed();
     service = injector.get(AuthenticationService);
+    tokenService = injector.get(TokenService);
     httpMock = injector.get(HttpTestingController);
   });
 
@@ -31,12 +38,27 @@ describe('AuthenticationService', () => {
     httpMock.verify();
   });
 
+  describe('Is the user logged in', () => {
+    it('should be logged in', () => {
+      spyOn(tokenService, 'isLoggedIn').and.returnValue(true);
+
+      const isLoggedIn = service.isLoggedIn();
+
+      expect(isLoggedIn).toBeTruthy();
+    });
+
+    it('should not be logged in', () => {
+      spyOn(tokenService, 'isLoggedIn').and.returnValue(false);
+
+      const isLoggedIn = service.isLoggedIn();
+
+      expect(isLoggedIn).toBeFalsy();
+    });
+  });
+
   describe('Logging in', () => {
 
     const loginApi = '/api/auth/login';
-
-    const username = 'test';
-    const password = 'test';
 
     it('should return tokens with valid credentials', () => {
       service.login(username, password).subscribe((data: Tokens) => {
@@ -50,7 +72,6 @@ describe('AuthenticationService', () => {
     });
 
     it('should store the tokens on valid login', () => {
-      const tokenService = injector.get(TokenService);
       const tokenSpy = spyOn(tokenService, 'setTokens');
 
       service.login(username, password).subscribe(_ => {
@@ -65,7 +86,8 @@ describe('AuthenticationService', () => {
 
     it('should throw an error with bad credentials', () => {
       const error = 'Invalid username or password.';
-      service.login(username, password).subscribe(() => {}, err => {
+      service.login(username, password).subscribe(() => {
+      }, err => {
         expect(err).toBe(error);
       });
 
@@ -79,7 +101,8 @@ describe('AuthenticationService', () => {
     });
 
     it('should give a friendly error if none is provided', () => {
-      service.login(username, password).subscribe(() => {}, err => {
+      service.login(username, password).subscribe(() => {
+      }, err => {
         expect(err).toContain('There\'s something wrong with our servers.');
       });
 
@@ -94,6 +117,59 @@ describe('AuthenticationService', () => {
 
   });
 
+  describe('Logging out', () => {
+    it('should log out', () => {
+      const tokenServiceSpy = spyOn(tokenService, 'clearTokens');
+
+      service.logout();
+
+      expect(tokenServiceSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Refreshing tokens', () => {
+
+    const refreshApi = '/api/auth/refresh';
+
+    describe('When a refresh is in progress', () => {
+      /**
+       * The first request should be the only one to send out a HTTP request.
+       * All requests before the HTTP request is completed should return
+       * the observable that is currently waiting on it.*
+       */
+      it('should return the observable instance', () => {
+        const spy = spyOn(TestBed.get(HttpClient), 'get').and.callThrough();
+
+        const firstRefresh = service.refreshTokens();
+        firstRefresh.subscribe();
+        httpMock.expectOne(refreshApi);
+
+        const secondRefresh = service.refreshTokens();
+        firstRefresh.subscribe();
+        httpMock.expectOne(refreshApi);
+
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(secondRefresh).toBe(firstRefresh);
+      });
+
+      it('should store the retrieved tokens', () => {
+        const tokenServiceSpy = spyOn(tokenService, 'setTokens').and.callFake(() => {});
+
+        service.refreshTokens().subscribe(() => {
+          expect(tokenServiceSpy).toHaveBeenCalledWith(mockTokens);
+        });
+
+        const req = httpMock.expectOne(refreshApi);
+        expect(req.request.method).toBe('GET');
+        req.flush(mockTokens);
+      });
+
+    });
+
+    it('Should return new tokens', () => {
+
+    });
+  });
 
 
 });
