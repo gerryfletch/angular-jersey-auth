@@ -18,9 +18,6 @@ export class MessageComponent implements OnInit {
       .subscribe(
         data => {
           this.message = data.message;
-        },
-        error => {
-          console.log(error);
         }
       );
   }
