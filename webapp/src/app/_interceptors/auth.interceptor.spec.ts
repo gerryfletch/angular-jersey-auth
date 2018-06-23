@@ -7,6 +7,7 @@ import {Message} from '../_models/message.model';
 import {HTTP_INTERCEPTORS, HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
+import {MockResponse} from '../MockResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -99,7 +100,7 @@ describe('AuthInterceptor', () => {
     expect(initialRequest.request.method).toBe('GET');
     const initialAuthHeader = initialRequest.request.headers.get('Authorization');
     expect(initialAuthHeader).toBe('Bearer expired_access_token');
-    initialRequest.flush(null, getUnauthorizedResponse());
+    initialRequest.flush(null, MockResponse.UNAUTHORIZED);
 
     // HTTP Request to refresh tokens
     const refreshRequest = httpMock.expectOne(refreshApiEndpoint);
@@ -121,11 +122,11 @@ describe('AuthInterceptor', () => {
 
     // Make initial request; get 401 back.
     const initialRequest = httpMock.expectOne(testApiEndpoint);
-    initialRequest.flush(null, getUnauthorizedResponse());
+    initialRequest.flush(null, MockResponse.UNAUTHORIZED);
 
     // Make refresh request; get 401 back again.
     const refreshRequest = httpMock.expectOne(refreshApiEndpoint);
-    refreshRequest.flush(null, getUnauthorizedResponse());
+    refreshRequest.flush(null, MockResponse.UNAUTHORIZED);
   });
 
   it('should log the user out if the token can\'t be refreshed', () => {
@@ -139,11 +140,11 @@ describe('AuthInterceptor', () => {
 
     // make initial request; get 401 back.
     const initialRequest = httpMock.expectOne(testApiEndpoint);
-    initialRequest.flush(null, getUnauthorizedResponse());
+    initialRequest.flush(null, MockResponse.UNAUTHORIZED);
 
     // Make refresh request; get 401 back again.
     const refreshRequest = httpMock.expectOne(refreshApiEndpoint);
-    refreshRequest.flush(null, getUnauthorizedResponse());
+    refreshRequest.flush(null, MockResponse.UNAUTHORIZED);
 
     // Expect that the request isn't repeated
     httpMock.expectNone(testApiEndpoint);
@@ -161,7 +162,7 @@ describe('AuthInterceptor', () => {
 
     // Respond with 400 Bad Request.
     const req = httpMock.expectOne(testApiEndpoint);
-    req.flush(null, getBadRequest());
+    req.flush(null, MockResponse.BAD_REQUEST);
 
     httpMock.expectNone(refreshApiEndpoint);
   });
