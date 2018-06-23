@@ -22,6 +22,8 @@ class MockService {
 }
 
 describe('AuthInterceptor', () => {
+  const testApiEndpoint = '/api/test';
+  const refreshApiEndpoint = '/api/auth/refresh';
 
   let authService: AuthenticationService;
   let tokenService: TokenService;
@@ -58,23 +60,23 @@ describe('AuthInterceptor', () => {
   it('should refresh the token', () => {
     spyOn(authService, 'isLoggedIn').and.returnValue(true);
     spyOn(tokenService, 'getAccessToken').and.returnValue('expired_access_token');
-    // Attempt a request
-    dataService.getRequest('/api/test').subscribe();
+
+    dataService.getRequest(testApiEndpoint).subscribe(); // Attempt a request
 
     // HTTP Request to get a resource requiring authentication
-    const initialRequest = httpMock.expectOne('/api/test');
+    const initialRequest = httpMock.expectOne(testApiEndpoint);
     expect(initialRequest.request.method).toBe('GET');
     const initialAuthHeader = initialRequest.request.headers.get('Authorization');
     expect(initialAuthHeader).toBe('Bearer expired_access_token');
     initialRequest.flush(null, getUnauthorizedResponse());
 
     // HTTP Request to refresh tokens
-    const refreshRequest = httpMock.expectOne('/api/auth/refresh');
+    const refreshRequest = httpMock.expectOne(refreshApiEndpoint);
     expect(refreshRequest.request.method).toBe('GET');
     refreshRequest.flush(mockMessage);
 
     // Retried HTTP request with original endpoint.
-    const repeatedRequest = httpMock.expectOne('/api/test');
+    const repeatedRequest = httpMock.expectOne(testApiEndpoint);
     expect(repeatedRequest.request.method).toBe('GET');
   });
 
