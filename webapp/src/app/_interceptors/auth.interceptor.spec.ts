@@ -104,6 +104,22 @@ describe('AuthInterceptor', () => {
     expect(repeatedRequest.request.method).toBe('GET');
   });
 
+  it('should error if the token can\'t be refreshed', () => {
+    spyOn(authService, 'isLoggedIn').and.returnValue(true);
+
+    dataService.getRequest(testApiEndpoint).subscribe(() => {}, error => {
+      expect(error).toBeTruthy();
+    });
+
+    // Make initial request; get 401 back.
+    const initialRequest = httpMock.expectOne(testApiEndpoint);
+    initialRequest.flush(null, getUnauthorizedResponse());
+
+    // Make refresh request; get 401 back again.
+    const refreshRequest = httpMock.expectOne(refreshApiEndpoint);
+    refreshRequest.flush(null, getUnauthorizedResponse());
+  });
+
 });
 
 function getUnauthorizedResponse() {
