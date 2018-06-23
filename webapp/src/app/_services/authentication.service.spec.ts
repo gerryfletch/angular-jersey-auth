@@ -40,7 +40,7 @@ describe('AuthenticationService', () => {
 
   describe('Is the user logged in', () => {
     it('should be logged in', () => {
-      spyOn(tokenService, 'isLoggedIn').and.returnValue(true);
+      spyOn(tokenService, 'areTokensSet').and.returnValue(true);
 
       const isLoggedIn = service.isLoggedIn();
 
@@ -48,7 +48,7 @@ describe('AuthenticationService', () => {
     });
 
     it('should not be logged in', () => {
-      spyOn(tokenService, 'isLoggedIn').and.returnValue(false);
+      spyOn(tokenService, 'areTokensSet').and.returnValue(false);
 
       const isLoggedIn = service.isLoggedIn();
 
