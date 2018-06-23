@@ -17,7 +17,7 @@ export class AuthenticationService {
   }
 
   isLoggedIn(): boolean {
-    return this.tokenService.isLoggedIn();
+    return this.tokenService.areTokensSet();
   }
 
   /**
