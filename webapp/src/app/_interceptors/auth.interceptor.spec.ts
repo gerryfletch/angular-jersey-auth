@@ -21,6 +21,9 @@ class MockService {
   }
 }
 
+/**
+ * Note: if you are testing a http error response, you must subscribe and catch it, otherwise an exception will be bubbled to AfterEach.
+ */
 describe('AuthInterceptor', () => {
   const testApiEndpoint = '/api/test';
   const refreshApiEndpoint = '/api/auth/refresh';
@@ -51,6 +54,10 @@ describe('AuthInterceptor', () => {
     dataService = injector.get(MockService);
 
     httpMock = injector.get(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
   });
 
   it('should create', () => {
@@ -118,6 +125,28 @@ describe('AuthInterceptor', () => {
     // Make refresh request; get 401 back again.
     const refreshRequest = httpMock.expectOne(refreshApiEndpoint);
     refreshRequest.flush(null, getUnauthorizedResponse());
+  });
+
+  it('should log the user out if the token can\'t be refreshed', () => {
+    const spy = spyOn(authService, 'logout');
+    spyOn(authService, 'isLoggedIn').and.returnValue(true);
+
+    dataService.getRequest(testApiEndpoint).subscribe(() => {}, error => {
+      expect(error).toBeTruthy();
+    });
+
+    // make initial request; get 401 back.
+    const initialRequest = httpMock.expectOne(testApiEndpoint);
+    initialRequest.flush(null, getUnauthorizedResponse());
+
+    // Make refresh request; get 401 back again.
+    const refreshRequest = httpMock.expectOne(refreshApiEndpoint);
+    refreshRequest.flush(null, getUnauthorizedResponse());
+
+    // Expect that the request isn't repeated
+    httpMock.expectNone(testApiEndpoint);
+
+    expect(spy).toHaveBeenCalled();
   });
 
 });
