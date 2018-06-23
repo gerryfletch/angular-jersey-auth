@@ -12,7 +12,7 @@ export class TokenService {
   constructor() {
   }
 
-  isLoggedIn(): boolean {
+  areTokensSet(): boolean {
     return localStorage.getItem(this.REFRESH_KEY) !== null;
   }
 
