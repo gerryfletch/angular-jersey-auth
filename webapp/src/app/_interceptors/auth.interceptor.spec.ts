@@ -128,7 +128,7 @@ describe('AuthInterceptor', () => {
   });
 
   it('should log the user out if the token can\'t be refreshed', () => {
-    const spy = spyOn(authService, 'logout');
+    const logoutSpy = spyOn(authService, 'logout');
     spyOn(authService, 'isLoggedIn').and.returnValue(true);
 
     dataService.getRequest(testApiEndpoint).subscribe(() => {}, error => {
@@ -146,7 +146,11 @@ describe('AuthInterceptor', () => {
     // Expect that the request isn't repeated
     httpMock.expectNone(testApiEndpoint);
 
-    expect(spy).toHaveBeenCalled();
+    expect(logoutSpy).toHaveBeenCalled();
+  });
+
+  it('should return the request error with no further action if it\'t not a 401.', () => {
+
   });
 
 });
