@@ -57,6 +57,21 @@ describe('AuthInterceptor', () => {
     expect(authService).toBeTruthy();
   });
 
+  it('should append the authorization header for a logged in user', () => {
+    const token = 'token';
+    spyOn(tokenService, 'getAccessToken').and.returnValue(token);
+    spyOn(authService, 'isLoggedIn').and.returnValue(true);
+
+    dataService.getRequest(testApiEndpoint).subscribe();
+
+    const req = httpMock.expectOne(testApiEndpoint);
+    expect(req.request.headers.get('Authorization')).toContain(token);
+  });
+
+  /**
+   * After a failed request with a 401 response, for a logged in user, the interceptor should make a request
+   * to refresh. On success, it should then retry the original request.
+   */
   it('should refresh the token', () => {
     spyOn(authService, 'isLoggedIn').and.returnValue(true);
     spyOn(tokenService, 'getAccessToken').and.returnValue('expired_access_token');
