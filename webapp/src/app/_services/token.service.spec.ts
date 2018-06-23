@@ -34,7 +34,7 @@ describe('TokenService', () => {
     it('returns false if no tokens exist', () => {
       localStorageGetSpy.and.returnValue(null);
 
-      const isLoggedIn = service.isLoggedIn();
+      const isLoggedIn = service.areTokensSet();
 
       expect(isLoggedIn).toBeFalsy();
       expect(localStorageGetSpy).toHaveBeenCalledWith(REFRESH_KEY);
@@ -43,7 +43,7 @@ describe('TokenService', () => {
     it('returns true if tokens exist', () => {
       localStorageGetSpy.and.returnValue(mockTokens.refresh_token);
 
-      const isLoggedIn = service.isLoggedIn();
+      const isLoggedIn = service.areTokensSet();
 
       expect(isLoggedIn).toBeTruthy();
       expect(localStorageGetSpy).toHaveBeenCalledWith(REFRESH_KEY);
