@@ -40,12 +40,22 @@ export class AuthInterceptor implements HttpInterceptor {
       return next.handle(req);
     }
 
-    const authReq = this.createAuthRequest(req);
+    let authReq: HttpRequest<any>;
+
+    if (this.authService.isLoggedIn()) {
+      authReq = this.createAuthRequest(req);
+    } else {
+      authReq = req;
+    }
 
     return next.handle(authReq).pipe(
       catchError((err: HttpErrorResponse) => {
         // Check if the response is unauthorized.
         if (err.status !== 401) {
+          return throwError(err);
+        }
+
+        if (! this.authService.isLoggedIn()) {
           return throwError(err);
         }
 
