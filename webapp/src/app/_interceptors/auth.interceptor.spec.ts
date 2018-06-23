@@ -114,7 +114,8 @@ describe('AuthInterceptor', () => {
   it('should error if the token can\'t be refreshed', () => {
     spyOn(authService, 'isLoggedIn').and.returnValue(true);
 
-    dataService.getRequest(testApiEndpoint).subscribe(() => {}, error => {
+    dataService.getRequest(testApiEndpoint).subscribe(() => {
+    }, error => {
       expect(error).toBeTruthy();
     });
 
@@ -131,7 +132,8 @@ describe('AuthInterceptor', () => {
     const logoutSpy = spyOn(authService, 'logout');
     spyOn(authService, 'isLoggedIn').and.returnValue(true);
 
-    dataService.getRequest(testApiEndpoint).subscribe(() => {}, error => {
+    dataService.getRequest(testApiEndpoint).subscribe(() => {
+    }, error => {
       expect(error).toBeTruthy();
     });
 
@@ -152,13 +154,30 @@ describe('AuthInterceptor', () => {
   it('should not refresh if the response is not 401', () => {
     spyOn(authService, 'isLoggedIn').and.returnValue(true);
 
-    dataService.getRequest(testApiEndpoint).subscribe(() => {}, error => {
+    dataService.getRequest(testApiEndpoint).subscribe(() => {
+    }, error => {
       expect(error).toBeTruthy();
     });
 
     // Respond with 400 Bad Request.
     const req = httpMock.expectOne(testApiEndpoint);
     req.flush(null, getBadRequest());
+
+    httpMock.expectNone(refreshApiEndpoint);
+  });
+
+  it('should not refresh if the user is not logged in', () => {
+    spyOn(authService, 'isLoggedIn').and.returnValue(false);
+
+    dataService.getRequest(testApiEndpoint).subscribe(() => {
+    }, error => {
+      expect(error).toBeTruthy();
+    });
+
+    const req = httpMock.expectOne(testApiEndpoint);
+    req.flush(null, getUnauthorizedResponse());
+
+    httpMock.expectNone(refreshApiEndpoint);
   });
 
 });
