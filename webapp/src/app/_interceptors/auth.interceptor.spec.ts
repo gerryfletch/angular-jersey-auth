@@ -176,21 +176,25 @@ describe('AuthInterceptor', () => {
     });
 
     const req = httpMock.expectOne(testApiEndpoint);
-    req.flush(null, getUnauthorizedResponse());
+    req.flush(null, MockResponse.UNAUTHORIZED);
 
     httpMock.expectNone(refreshApiEndpoint);
   });
 
+  it('should return a standard error if something other than 401 comes back after refreshing', () => {
+    spyOn(authService, 'isLoggedIn').and.returnValue(true);
+
+    dataService.getRequest(testApiEndpoint).subscribe(() => {
+    }, error => {
+      expect(error).toBeTruthy();
+    });
+
+    const initialRequest = httpMock.expectOne(testApiEndpoint);
+    initialRequest.flush(null, MockResponse.UNAUTHORIZED);
+
+    const refreshRequest = httpMock.expectOne(refreshApiEndpoint);
+    refreshRequest.flush(null, MockResponse.INTERNAL_SERVER_ERROR);
+
+  });
+
 });
-
-function getUnauthorizedResponse() {
-  return {status: 401, statusText: 'You don\'t have permission for this resource.'};
-}
-
-function getBadRequest() {
-  return {status: 400, statusText: 'Bad request.'};
-}
-
-function getInternalServerResponse() {
-  return {status: 500, statusText: 'Internal server error.'};
-}
