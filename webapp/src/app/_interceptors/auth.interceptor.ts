@@ -55,7 +55,7 @@ export class AuthInterceptor implements HttpInterceptor {
           return throwError(err);
         }
 
-        if (! this.authService.isLoggedIn()) {
+        if (!this.authService.isLoggedIn()) {
           return throwError(err);
         }
 
@@ -66,23 +66,21 @@ export class AuthInterceptor implements HttpInterceptor {
   }
 
   /**
-   * Attempt to refresh our tokens. If authentication is successful, repeat the failed request and return
+   * Attempt to refresh the access token.. If authentication is successful, repeat the failed request and return
    * its observable. Otherwise, log the user out and throw the error response.
    * @param req The original (failed) request to be retried after authentication.
    * @param next The next http handler in the interceptor barrel.
    * @returns {Observable<any>} Either the http response or an error.
    */
   private refreshAndRetry(req, next): Observable<any> {
-    return this.authService.refreshTokens().pipe(
-      switchMap(() => {
-        return next.handle(this.createAuthRequest(req));
-      }),
-      catchError((e: HttpErrorResponse) => {
-        // The token refresh was unauthorized, so log them out.
-        if (e.status === 401) {
+    return this.authService.refreshAccessToken().pipe(
+      switchMap(() => next.handle(this.createAuthRequest(req))),
+      catchError((err: HttpErrorResponse) => {
+        if (err.status === 401) {
           this.authService.logout();
         }
-        return throwError(e);
+
+        return throwError(err);
       })
     );
   }
