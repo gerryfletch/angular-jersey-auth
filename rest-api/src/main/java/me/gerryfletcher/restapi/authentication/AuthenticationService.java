@@ -35,4 +35,8 @@ public class AuthenticationService {
         return tokenService.createAuthTokens(username, role);
     }
 
+    public String refreshAccessToken(String username, String role) throws JWTCreationException {
+        return tokenService.createAccessToken(username, role);
+    }
+
 }

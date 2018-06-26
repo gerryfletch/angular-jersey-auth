@@ -2,6 +2,7 @@ package me.gerryfletcher.restapi.endpoints;
 
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import me.gerryfletcher.restapi.authentication.AuthenticationService;
 import me.gerryfletcher.restapi.authentication.Role;
@@ -41,14 +42,23 @@ public class AuthenticationResource {
     @RolesAllowed(Role.REFRESH)
     public Response getRefreshToken(@Context SecurityContext context) throws JWTCreationException {
         User user = (User) context.getUserPrincipal();
-        AuthTokens authTokens = authService.refreshTokens(user.getName(), user.getRole());
-        return Response.ok().entity(gson.toJson(formResponse(authTokens))).build();
+
+        String accessToken = authService.refreshAccessToken(user.getName(), user.getRole());
+        String accessTokenResponse = gson.toJson(formAccessTokenResponse(accessToken));
+
+        return Response.ok().entity(accessTokenResponse).build();
     }
 
     private JsonObject formResponse(AuthTokens authTokens) throws JWTCreationException {
         JsonObject result = new JsonObject();
         result.addProperty("access_token", authTokens.getAccessToken());
         result.addProperty("refresh_token", authTokens.getRefreshToken());
+        return result;
+    }
+
+    private JsonObject formAccessTokenResponse(String accessToken) {
+        JsonObject result = new JsonObject();
+        result.addProperty("access_token", accessToken);
         return result;
     }
 
