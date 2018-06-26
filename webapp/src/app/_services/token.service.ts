@@ -29,10 +29,6 @@ export class TokenService {
     localStorage.setItem(this.ACCESS_KEY, token.token);
   }
 
-  setRefreshToken(token: Token): void {
-    localStorage.setItem(this.REFRESH_KEY, token.token);
-  }
-
   setTokens(token: Tokens): void {
     localStorage.setItem(this.REFRESH_KEY, token.refresh_token);
     localStorage.setItem(this.ACCESS_KEY, token.access_token);
