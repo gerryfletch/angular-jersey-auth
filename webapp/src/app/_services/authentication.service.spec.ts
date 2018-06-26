@@ -4,8 +4,9 @@ import {HttpClientTestingModule, HttpTestingController} from '@angular/common/ht
 import {Tokens} from '../_models/tokens.model';
 import {TokenService} from './token.service';
 import {Observable, of, Subject} from 'rxjs';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {AccessToken} from '../_models/access-token.model';
+import {MockResponse} from '../MockResponse';
 
 describe('AuthenticationService', () => {
 
@@ -198,8 +199,19 @@ describe('AuthenticationService', () => {
       });
     });
 
-    describe('On failiure to refresh', () => {
+    describe('On failure to refresh', () => {
+      it('should return 401 unauthorized', () => {
+        const tokenServiceSpy = spyOn(tokenService, 'setAccessToken');
 
+        service.refreshAccessToken().subscribe(() => {}, (error: HttpErrorResponse) => {
+          expect(error.status).toBe(401);
+          expect(tokenServiceSpy).not.toHaveBeenCalled();
+        });
+
+        const req = httpMock.expectOne(refreshApi);
+        req.flush(null, MockResponse.UNAUTHORIZED);
+
+      });
     });
 
   });
