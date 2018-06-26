@@ -5,6 +5,7 @@ import {Tokens} from '../_models/tokens.model';
 import {TokenService} from './token.service';
 import {Observable, of, Subject} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
+import {AccessToken} from '../_models/access-token.model';
 
 describe('AuthenticationService', () => {
 
@@ -15,11 +16,6 @@ describe('AuthenticationService', () => {
 
   const username = 'test';
   const password = 'test';
-
-  const mockTokens = {
-    refresh_token: 'xxx.yyy.zzz',
-    access_token: 'xxx.yyy.zzz'
-  } as Tokens;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -58,6 +54,10 @@ describe('AuthenticationService', () => {
 
   describe('Logging in', () => {
 
+    const mockTokens = {
+      refresh_token: 'xxx.yyy.zzz',
+      access_token: 'xxx.yyy.zzz'
+    } as Tokens;
     const loginApi = '/api/auth/login';
 
     it('should return tokens with valid credentials', () => {
@@ -145,6 +145,7 @@ describe('AuthenticationService', () => {
 
   describe('Refreshing tokens', () => {
 
+    const mockAccessToken = {'access_token': 'xxx.yyy.zzz'} as AccessToken;
     const refreshApi = '/api/auth/refresh';
 
     describe('When a refresh is in progress', () => {
@@ -156,11 +157,11 @@ describe('AuthenticationService', () => {
       it('should return the observable instance', () => {
         const spy = spyOn(TestBed.get(HttpClient), 'get').and.callThrough();
 
-        const firstRefresh = service.refreshTokens();
+        const firstRefresh = service.refreshAccessToken();
         firstRefresh.subscribe();
         httpMock.expectOne(refreshApi);
 
-        const secondRefresh = service.refreshTokens();
+        const secondRefresh = service.refreshAccessToken();
         firstRefresh.subscribe();
         httpMock.expectOne(refreshApi);
 
@@ -169,22 +170,38 @@ describe('AuthenticationService', () => {
       });
 
       it('should store the retrieved tokens', () => {
-        const tokenServiceSpy = spyOn(tokenService, 'setTokens').and.callFake(() => {});
+        const tokenServiceSpy = spyOn(tokenService, 'setAccessToken').and.callFake(() => {});
 
-        service.refreshTokens().subscribe(() => {
-          expect(tokenServiceSpy).toHaveBeenCalledWith(mockTokens);
+        service.refreshAccessToken().subscribe(() => {
+          expect(tokenServiceSpy).toHaveBeenCalledWith(mockAccessToken);
         });
 
         const req = httpMock.expectOne(refreshApi);
         expect(req.request.method).toBe('GET');
-        req.flush(mockTokens);
+        req.flush(mockAccessToken);
       });
 
     });
 
-    it('Should return new tokens', () => {
+    describe('On successful refresh', () => {
+      it('Should return new tokens', () => {
+        const tokenServiceSpy = spyOn(tokenService, 'setAccessToken').and.callFake(() => {});
+
+        service.refreshAccessToken().subscribe((token: AccessToken) => {
+          expect(token).toBe(mockAccessToken);
+          expect(tokenServiceSpy).toHaveBeenCalledWith(mockAccessToken);
+        });
+
+        const req = httpMock.expectOne(refreshApi);
+        expect(req.request.method).toBe('GET');
+        req.flush(mockAccessToken);
+      });
+    });
+
+    describe('On failiure to refresh', () => {
 
     });
+
   });
 
 
