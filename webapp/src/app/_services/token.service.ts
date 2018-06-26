@@ -1,6 +1,5 @@
 import {Injectable} from '@angular/core';
 import {Tokens} from '../_models/tokens.model';
-import {Token} from '../_models/token.model';
 import {AccessToken} from '../_models/access-token.model';
 
 @Injectable({

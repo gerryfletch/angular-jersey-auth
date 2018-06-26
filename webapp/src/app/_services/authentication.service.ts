@@ -3,15 +3,15 @@ import {HttpClient, HttpErrorResponse, HttpHeaders, HttpParams} from '@angular/c
 import {Observable, throwError} from 'rxjs/index';
 import {Tokens} from '../_models/tokens.model';
 import {TokenService} from './token.service';
-import {catchError, map, tap} from 'rxjs/internal/operators';
-import {AccessToken, Token} from '../_models/access-token.model';
+import {catchError, tap} from 'rxjs/internal/operators';
+import {AccessToken} from '../_models/access-token.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService {
 
-  private authReqHandler: Observable<Token>;
+  private authReqHandler: Observable<AccessToken>;
 
   constructor(private http: HttpClient, private tokenService: TokenService) {
     this.authReqHandler = null;
@@ -61,7 +61,7 @@ export class AuthenticationService {
    * and it is returned to any subsequent requests.
    * @returns {Observable<Token>}  A new valid refresh-access token pair.
    */
-  refreshAccessToken(): Observable<Token> {
+  refreshAccessToken(): Observable<AccessToken> {
     if (!! this.authReqHandler) {
       return this.authReqHandler;
     }
