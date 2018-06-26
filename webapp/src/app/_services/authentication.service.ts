@@ -75,7 +75,7 @@ export class AuthenticationService {
     };
 
     this.authReqHandler = this.http.get<AccessToken>('/api/auth/refresh', httpOptions).pipe(
-        tap((token: AccessToken) => this.tokenService.setAccessToken(token.access_token))
+        tap((token: AccessToken) => this.tokenService.setAccessToken(token))
     );
 
     return this.authReqHandler;
