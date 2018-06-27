@@ -42,6 +42,8 @@ public class AuthenticationService {
 
     /**
      * Checks if a user is permitted to refresh a token.
+     * <b>Important:</b> If a user is affected by permissions, it is only affected for the duration of the access
+     * tokens lifetime. This is so that we can demonstrate the permissions working easily.
      *
      * @return A new access token with the users details.
      */
