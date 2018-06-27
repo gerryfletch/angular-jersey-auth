@@ -1,6 +1,6 @@
-package me.gerryfletcher.restapi.mappers;
+package me.gerryfletcher.restapi.mappers.permissions;
 
-import me.gerryfletcher.restapi.exceptions.UserRevokedException;
+import me.gerryfletcher.restapi.exceptions.permissions.UserRevokedException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
