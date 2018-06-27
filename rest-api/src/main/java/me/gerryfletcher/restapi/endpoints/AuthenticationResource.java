@@ -6,8 +6,8 @@ import com.google.gson.JsonObject;
 import me.gerryfletcher.restapi.authentication.AuthenticationService;
 import me.gerryfletcher.restapi.authentication.Role;
 import me.gerryfletcher.restapi.authentication.UserSecurityContext;
-import me.gerryfletcher.restapi.exceptions.AuthenticationException;
 import me.gerryfletcher.restapi.exceptions.InvalidLoginException;
+import me.gerryfletcher.restapi.exceptions.UserRevokedException;
 import me.gerryfletcher.restapi.models.AuthTokens;
 import me.gerryfletcher.restapi.models.User;
 import me.gerryfletcher.restapi.permissions.PermissionAction;
@@ -59,7 +59,7 @@ public class AuthenticationResource {
     @Path("refresh")
     @RolesAllowed(Role.REFRESH)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response refreshAccessToken(@Context SecurityContext cont) throws JWTCreationException, AuthenticationException {
+    public Response refreshAccessToken(@Context SecurityContext cont) throws JWTCreationException, UserRevokedException {
         UserSecurityContext context = (UserSecurityContext) cont;
         User user = context.getUserPrincipal();
 
