@@ -2,7 +2,6 @@ package me.gerryfletcher.restapi.endpoints;
 
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import me.gerryfletcher.restapi.authentication.AuthenticationService;
 import me.gerryfletcher.restapi.authentication.Role;
@@ -30,6 +29,10 @@ public class AuthenticationResource {
         this.gson = new Gson();
     }
 
+    /**
+     * @return A pair of JWTs on successful login.
+     * @throws InvalidLoginException For incorrect credentials.
+     */
     @POST
     @Path("login")
     @PermitAll
@@ -39,6 +42,11 @@ public class AuthenticationResource {
         return Response.ok().entity(gson.toJson(formResponse(authTokens))).build();
     }
 
+    /**
+     * If the refresh token is valid, create and return an access token.
+     * @param context The user requesting a refresh.
+     * @return A fresh access token.
+     */
     @GET
     @Path("refresh")
     @RolesAllowed(Role.REFRESH)
