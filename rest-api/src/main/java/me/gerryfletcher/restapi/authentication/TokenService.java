@@ -53,10 +53,10 @@ public class TokenService {
     String createAccessToken(String username, String role) throws JWTCreationException {
         return JWT.create()
                 .withIssuer("auth0")
+                .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(3)))
+                .withIssuedAt(new Date())
                 .withClaim("username", username)
                 .withClaim("role", role)
-//                .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(7)))
-                .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(3)))
                 .sign(algorithm);
     }
 
@@ -70,9 +70,10 @@ public class TokenService {
     String createRefreshToken(String username) throws JWTCreationException {
         return JWT.create()
                 .withIssuer("auth0")
+                .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365)))
+                .withIssuedAt(new Date())
                 .withClaim("username", username)
                 .withClaim("role", Role.REFRESH)
-                .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365)))
                 .sign(algorithm);
     }
 
