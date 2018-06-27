@@ -4,7 +4,9 @@ import me.gerryfletcher.restapi.exceptions.permissions.PermissionException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
 
+@Provider
 public class PermissionExceptionMapper implements ExceptionMapper<PermissionException> {
     @Override
     public Response toResponse(PermissionException exception) {

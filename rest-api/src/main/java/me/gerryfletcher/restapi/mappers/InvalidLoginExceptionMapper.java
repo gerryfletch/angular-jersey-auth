@@ -11,12 +11,9 @@ import javax.ws.rs.ext.Provider;
  */
 @Provider
 public class InvalidLoginExceptionMapper implements ExceptionMapper<InvalidLoginException> {
-
     @Override
     public Response toResponse(InvalidLoginException e) {
-        return Response
-                .status(Response.Status.BAD_REQUEST)
-                .entity(e.getMessage())
-                .build();
+        int code = Response.Status.BAD_REQUEST.getStatusCode();
+        return Response.status(code, e.getMessage()).build();
     }
 }
