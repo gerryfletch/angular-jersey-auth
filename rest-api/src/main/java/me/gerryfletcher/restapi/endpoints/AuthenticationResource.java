@@ -15,6 +15,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
@@ -32,6 +33,7 @@ public class AuthenticationResource {
     @POST
     @Path("login")
     @PermitAll
+    @Produces(MediaType.APPLICATION_JSON)
     public Response login(@NotNull @FormParam("username") String username, @NotNull @FormParam("password") String password) throws InvalidLoginException, JWTCreationException {
         AuthTokens authTokens = authService.login(username, password);
         return Response.ok().entity(gson.toJson(formResponse(authTokens))).build();
@@ -40,7 +42,8 @@ public class AuthenticationResource {
     @GET
     @Path("refresh")
     @RolesAllowed(Role.REFRESH)
-    public Response getRefreshToken(@Context SecurityContext context) throws JWTCreationException {
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response refreshAccessToken(@Context SecurityContext context) throws JWTCreationException {
         User user = (User) context.getUserPrincipal();
 
         String accessToken = authService.refreshAccessToken(user.getName(), user.getRole());
@@ -60,6 +63,13 @@ public class AuthenticationResource {
         JsonObject result = new JsonObject();
         result.addProperty("access_token", accessToken);
         return result;
+    }
+
+    @Path("revoke/{user}")
+    @RolesAllowed(Role.ADMIN)
+    @POST
+    public Response revokeUserPriveleges(@PathParam("user") String user) {
+        return Response.ok().build();
     }
 
 }
