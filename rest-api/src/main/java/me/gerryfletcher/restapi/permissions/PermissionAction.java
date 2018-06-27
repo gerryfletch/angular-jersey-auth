@@ -1,4 +1,4 @@
-package me.gerryfletcher.restapi.data;
+package me.gerryfletcher.restapi.permissions;
 
 public enum PermissionAction {
     // Make a user -> admin
