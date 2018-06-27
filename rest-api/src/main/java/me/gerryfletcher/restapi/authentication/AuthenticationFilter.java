@@ -14,15 +14,13 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Provider;
-import java.io.IOException;
 import java.lang.reflect.Method;
 
 @Priority(Priorities.AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
 
     private static final String AUTHORIZATION_PROPERTY = "authorization";
-    private static final String AUTHORIZATION_TYPE     = "Bearer";
+    private static final String AUTHORIZATION_TYPE = "Bearer";
 
     private static final TokenService tokenService = new TokenService();
 
@@ -31,41 +29,47 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     /**
      * Authenticates and filters incoming requests.
+     *
      * @param requestContext The request.
      */
     @Override
-    public void filter(ContainerRequestContext requestContext) throws IOException {
+    public void filter(ContainerRequestContext requestContext) {
 
         Method method = this.resourceInfo.getResourceMethod();
 
         if (method.isAnnotationPresent(PermitAll.class)) {
             return;
         } else if (method.isAnnotationPresent(DenyAll.class)) {
-            forbidden(requestContext );
+            forbidden(requestContext);
             return;
         }
 
         String auth = requestContext.getHeaderString(AUTHORIZATION_PROPERTY);
+        DecodedJWT token;
 
         try {
-            DecodedJWT token = tokenService.getDecodedJWT(getToken(auth));
-
-            String scheme = requestContext.getUriInfo().getRequestUri().getScheme();
-            String username = token.getClaim("username").asString();
-            String role = token.getClaim("role").asString();
-
-            if (! tokenIsValidRole(role, method.getAnnotation(RolesAllowed.class).value())) forbidden(requestContext);
-
-            User user = new User(username, role);
-            requestContext.setSecurityContext(new UserSecurityContext(user, scheme));
+            token = tokenService.getDecodedJWT(getToken(auth));
         } catch (AuthenticationException e) {
             unauthorized(requestContext, e.getMessage());
+            return;
         }
 
+        String scheme = requestContext.getUriInfo().getRequestUri().getScheme();
+        String username = token.getClaim("username").asString();
+        String role = token.getClaim("role").asString();
+
+        if (!tokenIsValidRole(role, method.getAnnotation(RolesAllowed.class).value())) {
+            forbidden(requestContext);
+            return;
+        }
+
+        User user = new User(username, role);
+        requestContext.setSecurityContext(new UserSecurityContext(user, scheme));
     }
 
     /**
      * Checks for Bearer authentication before returning the token.
+     *
      * @param authHeader Header in the form "Bearer xxx.yyy.zzz".
      * @return The token part of the header.
      * @throws AuthenticationException If there is no bearer auth type.
@@ -73,7 +77,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     private String getToken(String authHeader) throws AuthenticationException {
         if (authHeader == null || authHeader.isEmpty()) throw new AuthenticationException("No auth provided.");
         // Check that it is bearer auth.
-        if (! authHeader.toUpperCase().startsWith(AUTHORIZATION_TYPE.toUpperCase())) {
+        if (!authHeader.toUpperCase().startsWith(AUTHORIZATION_TYPE.toUpperCase())) {
             throw new AuthenticationException("Incorrect authorization type.");
         }
 
@@ -84,7 +88,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
      * @return True if a tokens role is permitted.
      */
     private boolean tokenIsValidRole(String userRole, String[] permittedRoles) {
-        for (String role: permittedRoles) if (role.equals(userRole)) return true;
+        for (String role : permittedRoles) if (role.equals(userRole)) return true;
         return false;
     }
 
@@ -92,16 +96,17 @@ public class AuthenticationFilter implements ContainerRequestFilter {
      * Set the context to abort with 401 Unauthorized.
      */
     private void unauthorized(ContainerRequestContext context, String message) {
-        context.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity(message).build());
+        int code = Response.Status.UNAUTHORIZED.getStatusCode();
+        context.abortWith(Response.status(code, message).build());
     }
 
     /**
      * Set the context to abort with 403 Forbidden.
      */
     private void forbidden(ContainerRequestContext context) {
-        context.abortWith(Response.status(Response.Status.FORBIDDEN)
-                .entity("You can't access this resource :(")
-                .build());
+        int code = Response.Status.FORBIDDEN.getStatusCode();
+        String text = "You don't have permission to access this resource.";
+        context.abortWith(Response.status(code, text).build());
     }
 
 }
