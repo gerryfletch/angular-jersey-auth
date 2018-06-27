@@ -7,6 +7,7 @@ import me.gerryfletcher.restapi.authentication.AuthenticationService;
 import me.gerryfletcher.restapi.authentication.Role;
 import me.gerryfletcher.restapi.authentication.UserSecurityContext;
 import me.gerryfletcher.restapi.exceptions.InvalidLoginException;
+import me.gerryfletcher.restapi.exceptions.permissions.UserLoggedOutException;
 import me.gerryfletcher.restapi.exceptions.permissions.UserRevokedException;
 import me.gerryfletcher.restapi.models.AuthTokens;
 import me.gerryfletcher.restapi.models.User;
@@ -59,7 +60,7 @@ public class AuthenticationResource {
     @Path("refresh")
     @RolesAllowed(Role.REFRESH)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response refreshAccessToken(@Context SecurityContext cont) throws JWTCreationException, UserRevokedException {
+    public Response refreshAccessToken(@Context SecurityContext cont) throws JWTCreationException, UserRevokedException, UserLoggedOutException {
         UserSecurityContext context = (UserSecurityContext) cont;
         User user = context.getUserPrincipal();
 
