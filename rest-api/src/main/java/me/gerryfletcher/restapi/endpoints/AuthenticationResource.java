@@ -100,7 +100,7 @@ public class AuthenticationResource {
     }
 
     /**
-     * Log a user out.
+     * Log a user out, invalidating their refresh tokens.
      */
     @Path("logout/{user}")
     @RolesAllowed(Role.ADMIN)
