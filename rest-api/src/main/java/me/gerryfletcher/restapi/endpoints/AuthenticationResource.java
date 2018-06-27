@@ -5,6 +5,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import me.gerryfletcher.restapi.authentication.AuthenticationService;
 import me.gerryfletcher.restapi.authentication.Role;
+import me.gerryfletcher.restapi.authentication.UserSecurityContext;
+import me.gerryfletcher.restapi.exceptions.AuthenticationException;
 import me.gerryfletcher.restapi.exceptions.InvalidLoginException;
 import me.gerryfletcher.restapi.models.AuthTokens;
 import me.gerryfletcher.restapi.models.User;
@@ -50,17 +52,18 @@ public class AuthenticationResource {
 
     /**
      * If the refresh token is valid, create and return an access token.
-     * @param context The user requesting a refresh.
+     * @param cont The user requesting a refresh.
      * @return A fresh access token.
      */
     @GET
     @Path("refresh")
     @RolesAllowed(Role.REFRESH)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response refreshAccessToken(@Context SecurityContext context) throws JWTCreationException {
-        User user = (User) context.getUserPrincipal();
+    public Response refreshAccessToken(@Context SecurityContext cont) throws JWTCreationException, AuthenticationException {
+        UserSecurityContext context = (UserSecurityContext) cont;
+        User user = context.getUserPrincipal();
 
-        String accessToken = authService.refreshAccessToken(user.getName(), user.getRole());
+        String accessToken = authService.refreshAccessToken(user.getName(), user.getRole(), context.getToken());
         String accessTokenResponse = gson.toJson(formAccessTokenResponse(accessToken));
 
         return Response.ok().entity(accessTokenResponse).build();
