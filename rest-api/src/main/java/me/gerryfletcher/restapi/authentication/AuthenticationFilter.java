@@ -47,8 +47,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
         String auth = requestContext.getHeaderString(AUTHORIZATION_PROPERTY);
 
-        System.out.println(auth);
-
         try {
             DecodedJWT token = tokenService.getDecodedJWT(getToken(auth));
 
@@ -56,14 +54,9 @@ public class AuthenticationFilter implements ContainerRequestFilter {
             String username = token.getClaim("username").asString();
             String role = token.getClaim("role").asString();
 
+            if (! tokenIsValidRole(role, method.getAnnotation(RolesAllowed.class).value())) forbidden(requestContext);
+
             User user = new User(username, role);
-
-//            String[] roles = method.getAnnotation(RolesAllowed.class).value();
-
-//            if (! tokenIsValidRole(role, roles)) {
-//                forbidden(requestContext);
-//            }
-
             requestContext.setSecurityContext(new UserSecurityContext(user, scheme));
         } catch (AuthenticationException e) {
             unauthorized(requestContext, e.getMessage());
