@@ -8,5 +8,7 @@ public enum PermissionAction {
     // Clear a user of a revokation
     CLEAR,
     // Revoke a users account
-    REVOKE
+    REVOKE,
+    // Log a user out
+    LOGOUT
 }
