@@ -7,7 +7,7 @@ import me.gerryfletcher.restapi.authentication.AuthenticationService;
 import me.gerryfletcher.restapi.authentication.Role;
 import me.gerryfletcher.restapi.authentication.UserSecurityContext;
 import me.gerryfletcher.restapi.exceptions.InvalidLoginException;
-import me.gerryfletcher.restapi.exceptions.UserRevokedException;
+import me.gerryfletcher.restapi.exceptions.permissions.UserRevokedException;
 import me.gerryfletcher.restapi.models.AuthTokens;
 import me.gerryfletcher.restapi.models.User;
 import me.gerryfletcher.restapi.permissions.PermissionAction;
