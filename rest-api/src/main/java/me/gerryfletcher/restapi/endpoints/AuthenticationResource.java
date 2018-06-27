@@ -73,10 +73,53 @@ public class AuthenticationResource {
         return result;
     }
 
+    /**
+     * Revoke a users account.
+     */
     @Path("revoke/{user}")
     @RolesAllowed(Role.ADMIN)
     @POST
-    public Response revokeUserPriveleges(@PathParam("user") String user) {
+    public Response revokeUser(@PathParam("user") String user) {
+        return Response.ok().build();
+    }
+
+    /**
+     * Re-enable a users account.
+     */
+    @Path("clear/{user}")
+    @RolesAllowed(Role.ADMIN)
+    @POST
+    public Response clearUser(@PathParam("user") String user) {
+        return Response.ok().build();
+    }
+
+    /**
+     * Log a user out.
+     */
+    @Path("logout/{user}")
+    @RolesAllowed(Role.ADMIN)
+    @POST
+    public Response logoutUser(@PathParam("user") String user) {
+        return Response.ok().build();
+    }
+
+    /**
+     * Promote a user to the next tier.
+     */
+    @Path("promote/{user}")
+    @RolesAllowed(Role.ADMIN)
+    @POST
+    public Response promoteUser(@PathParam("user") String user) {
+        return Response.ok().build();
+    }
+
+    /**
+     * Demote a user to the previous tier.
+     */
+    @Path("demote/{user}")
+    @RolesAllowed(Role.ADMIN)
+    @POST
+    public Response demoteUser(@PathParam("user") String user) {
         return Response.ok().build();
     }
 
