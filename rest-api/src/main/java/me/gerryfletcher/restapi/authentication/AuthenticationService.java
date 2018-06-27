@@ -3,6 +3,7 @@ package me.gerryfletcher.restapi.authentication;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import me.gerryfletcher.restapi.exceptions.InvalidLoginException;
+import me.gerryfletcher.restapi.exceptions.permissions.UserLoggedOutException;
 import me.gerryfletcher.restapi.exceptions.permissions.UserRevokedException;
 import me.gerryfletcher.restapi.models.AuthTokens;
 import me.gerryfletcher.restapi.permissions.PermissionAction;
@@ -44,7 +45,7 @@ public class AuthenticationService {
      *
      * @return A new access token with the users details.
      */
-    public String refreshAccessToken(String username, String role, DecodedJWT token) throws JWTCreationException, UserRevokedException {
+    public String refreshAccessToken(String username, String role, DecodedJWT token) throws JWTCreationException, UserRevokedException, UserLoggedOutException {
         UserPermissions userPermissions = permissionService.getUserPermissions(username);
         Date permissionDate = userPermissions.issuedAt();
 
@@ -55,6 +56,11 @@ public class AuthenticationService {
                 case REVOKE:
                     throw new UserRevokedException();
                 case LOGOUT:
+                    throw new UserLoggedOutException();
+                case PROMOTE:
+                    role = Role.ADMIN;
+                case DEMOTE:
+                    role = Role.USER;
             }
         }
 
