@@ -1,7 +1,6 @@
 package me.gerryfletcher.restapi.authentication;
 
 import com.auth0.jwt.exceptions.JWTCreationException;
-import me.gerryfletcher.restapi.exceptions.AuthenticationException;
 import me.gerryfletcher.restapi.exceptions.InvalidLoginException;
 import me.gerryfletcher.restapi.models.AuthTokens;
 
@@ -19,7 +18,6 @@ public class AuthenticationService {
      * <b>This is purely an example.</b>
      * @return The newly created Auth Tokens.
      * @throws InvalidLoginException The username and password combination is incorrect.
-     * @throws AuthenticationException If the tokens cannot be created.
      */
     public AuthTokens login(String username, String password) throws InvalidLoginException, JWTCreationException {
         if (username.equals("admin") && password.equals("password")) {
@@ -31,10 +29,9 @@ public class AuthenticationService {
         }
     }
 
-    public AuthTokens refreshTokens(String username, String role) throws JWTCreationException {
-        return tokenService.createAuthTokens(username, role);
-    }
-
+    /**
+     * @return A new access token with the users details.
+     */
     public String refreshAccessToken(String username, String role) throws JWTCreationException {
         return tokenService.createAccessToken(username, role);
     }
