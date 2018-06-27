@@ -6,18 +6,18 @@ public class UserPermissions {
 
     private String username;
     private PermissionAction action;
-    private Date timestamp;
+    private Date issuedAt;
 
     private String description;
 
-    public UserPermissions(String username, PermissionAction action, Date timestamp) {
+    public UserPermissions(String username, PermissionAction action, Date issuedAt) {
         this.username = username;
         this.action = action;
-        this.timestamp = timestamp;
+        this.issuedAt = issuedAt;
     }
 
-    public UserPermissions(String username, PermissionAction action, Date timestamp, String description) {
-        this(username, action, timestamp);
+    public UserPermissions(String username, PermissionAction action, Date issuedAt, String description) {
+        this(username, action, issuedAt);
         this.description = description;
     }
 
@@ -29,8 +29,8 @@ public class UserPermissions {
         return action;
     }
 
-    public Date getTimestamp() {
-        return timestamp;
+    public Date issuedAt() {
+        return issuedAt;
     }
 
     public String getDescription() {
