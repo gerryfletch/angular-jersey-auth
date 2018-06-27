@@ -8,6 +8,9 @@ import me.gerryfletcher.restapi.authentication.Role;
 import me.gerryfletcher.restapi.exceptions.InvalidLoginException;
 import me.gerryfletcher.restapi.models.AuthTokens;
 import me.gerryfletcher.restapi.models.User;
+import me.gerryfletcher.restapi.permissions.PermissionAction;
+import me.gerryfletcher.restapi.permissions.PermissionService;
+import me.gerryfletcher.restapi.permissions.UserPermissions;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
@@ -17,15 +20,18 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.Date;
 
 @Path("auth")
 public class AuthenticationResource {
 
     private AuthenticationService authService;
+    private PermissionService permissionService;
     private Gson gson;
 
     public AuthenticationResource() {
         this.authService = new AuthenticationService();
+        this.permissionService = new PermissionService();
         this.gson = new Gson();
     }
 
@@ -79,8 +85,8 @@ public class AuthenticationResource {
     @Path("revoke/{user}")
     @RolesAllowed(Role.ADMIN)
     @POST
-    public Response revokeUser(@PathParam("user") String user) {
-        return Response.ok().build();
+    public void revokeUser(@PathParam("user") String user) {
+        this.setUserPermissions(user, PermissionAction.REVOKE);
     }
 
     /**
@@ -89,8 +95,8 @@ public class AuthenticationResource {
     @Path("clear/{user}")
     @RolesAllowed(Role.ADMIN)
     @POST
-    public Response clearUser(@PathParam("user") String user) {
-        return Response.ok().build();
+    public void clearUser(@PathParam("user") String user) {
+        this.setUserPermissions(user, PermissionAction.CLEAR);
     }
 
     /**
@@ -99,8 +105,8 @@ public class AuthenticationResource {
     @Path("logout/{user}")
     @RolesAllowed(Role.ADMIN)
     @POST
-    public Response logoutUser(@PathParam("user") String user) {
-        return Response.ok().build();
+    public void logoutUser(@PathParam("user") String user) {
+        this.setUserPermissions(user, PermissionAction.LOGOUT);
     }
 
     /**
@@ -109,8 +115,8 @@ public class AuthenticationResource {
     @Path("promote/{user}")
     @RolesAllowed(Role.ADMIN)
     @POST
-    public Response promoteUser(@PathParam("user") String user) {
-        return Response.ok().build();
+    public void promoteUser(@PathParam("user") String user) {
+        this.setUserPermissions(user, PermissionAction.PROMOTE);
     }
 
     /**
@@ -119,8 +125,12 @@ public class AuthenticationResource {
     @Path("demote/{user}")
     @RolesAllowed(Role.ADMIN)
     @POST
-    public Response demoteUser(@PathParam("user") String user) {
-        return Response.ok().build();
+    public void demoteUser(@PathParam("user") String user) {
+        this.setUserPermissions(user, PermissionAction.DEMOTE);
+    }
+
+    private void setUserPermissions(String username, PermissionAction action) {
+        this.permissionService.putUserPermission(new UserPermissions(username, action, new Date()));
     }
 
 }
