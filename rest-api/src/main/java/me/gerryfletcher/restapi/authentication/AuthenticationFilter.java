@@ -64,7 +64,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         }
 
         User user = new User(username, role);
-        requestContext.setSecurityContext(new UserSecurityContext(user, scheme));
+        requestContext.setSecurityContext(new UserSecurityContext(user, scheme, token));
     }
 
     /**
