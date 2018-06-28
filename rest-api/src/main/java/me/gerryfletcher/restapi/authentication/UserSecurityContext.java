@@ -22,10 +22,6 @@ public class UserSecurityContext implements SecurityContext {
         this.token = token;
     }
 
-    UserSecurityContext(User user, String scheme) {
-        this(user, scheme, null);
-    }
-
     @Override
     public User getUserPrincipal() {
         return this.user;
@@ -33,7 +29,8 @@ public class UserSecurityContext implements SecurityContext {
 
     @Override
     public boolean isUserInRole(String role) {
-        return user.getRole().equalsIgnoreCase(role);
+        Role r = Role.valueOf(role.toUpperCase());
+        return user.getRole() == r;
     }
 
     @Override

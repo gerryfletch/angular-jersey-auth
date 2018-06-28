@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import me.gerryfletcher.restapi.authentication.AuthenticationService;
 import me.gerryfletcher.restapi.authentication.Role;
 import me.gerryfletcher.restapi.authentication.UserSecurityContext;
+import me.gerryfletcher.restapi.config.Secured;
 import me.gerryfletcher.restapi.exceptions.InvalidLoginException;
 import me.gerryfletcher.restapi.models.AuthTokens;
 import me.gerryfletcher.restapi.models.User;
@@ -12,8 +13,6 @@ import me.gerryfletcher.restapi.permissions.PermissionAction;
 import me.gerryfletcher.restapi.permissions.PermissionService;
 import me.gerryfletcher.restapi.permissions.UserPermissions;
 
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -41,7 +40,6 @@ public class AuthenticationResource {
      */
     @POST
     @Path("login")
-    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     public Response login(@NotNull @FormParam("username") String username, @NotNull @FormParam("password") String password) {
         AuthTokens authTokens = authService.login(username, password);
@@ -55,7 +53,7 @@ public class AuthenticationResource {
      */
     @GET
     @Path("refresh")
-    @RolesAllowed(Role.REFRESH)
+    @Secured({Role.REFRESH})
     @Produces(MediaType.APPLICATION_JSON)
     public Response refreshAccessToken(@Context ContainerRequestContext cont) {
         UserSecurityContext context = (UserSecurityContext) cont.getSecurityContext();
@@ -84,7 +82,7 @@ public class AuthenticationResource {
      * Revoke a users account.
      */
     @Path("revoke/{user}")
-    @RolesAllowed(Role.ADMIN)
+    @Secured({Role.ADMIN})
     @POST
     public void revokeUser(@PathParam("user") String user) {
         this.setUserPermissions(user, PermissionAction.REVOKE);
@@ -94,7 +92,7 @@ public class AuthenticationResource {
      * Re-enable a users account.
      */
     @Path("clear/{user}")
-    @RolesAllowed(Role.ADMIN)
+    @Secured({Role.ADMIN})
     @POST
     public void clearUser(@PathParam("user") String user) {
         this.setUserPermissions(user, PermissionAction.CLEAR);
@@ -104,7 +102,7 @@ public class AuthenticationResource {
      * Log a user out, invalidating their refresh tokens.
      */
     @Path("logout/{user}")
-    @RolesAllowed(Role.ADMIN)
+    @Secured({Role.ADMIN})
     @POST
     public void logoutUser(@PathParam("user") String user) {
         this.setUserPermissions(user, PermissionAction.LOGOUT);
@@ -114,7 +112,7 @@ public class AuthenticationResource {
      * Promote a user to the next tier.
      */
     @Path("promote/{user}")
-    @RolesAllowed(Role.ADMIN)
+    @Secured({Role.ADMIN})
     @POST
     public void promoteUser(@PathParam("user") String user) {
         this.setUserPermissions(user, PermissionAction.PROMOTE);
@@ -124,7 +122,7 @@ public class AuthenticationResource {
      * Demote a user to the previous tier.
      */
     @Path("demote/{user}")
-    @RolesAllowed(Role.ADMIN)
+    @Secured({Role.ADMIN})
     @POST
     public void demoteUser(@PathParam("user") String user) {
         this.setUserPermissions(user, PermissionAction.DEMOTE);

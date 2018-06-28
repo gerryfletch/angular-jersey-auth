@@ -44,7 +44,7 @@ public class AuthenticationService {
      *
      * @return A new access token with the users details.
      */
-    public String refreshAccessToken(String username, String role, DecodedJWT token) {
+    public String refreshAccessToken(String username, Role role, DecodedJWT token) {
         UserPermissions userPermissions = permissionService.getUserPermissions(username);
         Date permissionDate = userPermissions.issuedAt();
 

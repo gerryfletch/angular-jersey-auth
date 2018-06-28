@@ -14,7 +14,7 @@ public class PermissionService {
     private static Map<String, UserPermissions> userPermissionsMap = new HashMap<>();
 
     // Get the function to convert a role based on an action.
-    private static Map<PermissionAction, Function<String, String>> actionToRoleMap = new HashMap<>();
+    private static Map<PermissionAction, Function<Role, Role>> actionToRoleMap = new HashMap<>();
 
     public PermissionService() {
         constructActionMap();
@@ -32,7 +32,7 @@ public class PermissionService {
      * Get the permission altering function based on the action provided, and return the new role formed.
      * @return The new role of the user.
      */
-    public String getRoleFromAction(String originalRole, PermissionAction action) {
+    public Role getRoleFromAction(Role originalRole, PermissionAction action) {
         return actionToRoleMap.get(action).apply(originalRole);
     }
 
