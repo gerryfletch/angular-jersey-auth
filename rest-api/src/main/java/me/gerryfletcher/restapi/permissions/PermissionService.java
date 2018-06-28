@@ -1,54 +1,57 @@
 package me.gerryfletcher.restapi.permissions;
 
 import me.gerryfletcher.restapi.authentication.Role;
-import me.gerryfletcher.restapi.exceptions.permissions.UserLoggedOutException;
-import me.gerryfletcher.restapi.exceptions.permissions.UserRevokedException;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
+/**
+ * This class acts as the DB would.
+ */
 public class PermissionService {
 
-    // Lookup a users permission by username
-    private static Map<String, UserPermissions> userPermissionsMap = new HashMap<>();
-
-    // Get the function to convert a role based on an action.
-    private static Map<PermissionAction, Function<Role, Role>> actionToRoleMap = new HashMap<>();
+    private static Map<String, List<Permission>> userPermissionsMap = new HashMap<>();
+    private static Map<PermissionAction, Function<UserInfo, UserInfo>> permissionActionMap = new HashMap<>();
 
     public PermissionService() {
         constructActionMap();
     }
 
-    public void putUserPermission(UserPermissions permissions) {
-        userPermissionsMap.put(permissions.getUsername(), permissions);
+    public List<Permission> getUserPermissions(String username) {
+        return userPermissionsMap.getOrDefault(username, new ArrayList<>());
     }
 
-    public UserPermissions getUserPermissions(String username) {
-        return userPermissionsMap.get(username);
+    public void addUserPermission(String username, PermissionAction action) {
+        Permission permission = new Permission(action, new Date());
+        List<Permission> permissionList = userPermissionsMap.getOrDefault(username, new ArrayList<>());
+        permissionList.add(permission);
+
+        userPermissionsMap.put(username, permissionList);
     }
 
-    /**
-     * Get the permission altering function based on the action provided, and return the new role formed.
-     * @return The new role of the user.
-     */
-    public Role getRoleFromAction(Role originalRole, PermissionAction action) {
-        return actionToRoleMap.get(action).apply(originalRole);
-    }
+    public UserInfo updateUserPermissions(UserInfo userInfo) {
+        List<Permission> permissions = userPermissionsMap.getOrDefault(userInfo.getUsername(), new ArrayList<>());
+        if (permissions.isEmpty()) return userInfo;
 
-    /**
-     * Removes any permission actions from a user.
-     * @return the removed permissions.
-     */
-    public UserPermissions clearUserPermission(String username) {
-        return userPermissionsMap.remove(username);
+        Date tokenIssueDate = userInfo.getTokenIssueDate();
+
+        for (Permission permission : permissions) {
+            // If the permission was set on the account after the token was created, apply it to the user.
+            if (tokenIssueDate.before(permission.getIssuedAt())) {
+                PermissionAction action = permission.getAction();
+                userInfo = permissionActionMap.get(action).apply(userInfo);
+            }
+        }
+
+        return userInfo;
     }
 
     private void constructActionMap() {
-        actionToRoleMap.put(PermissionAction.DEMOTE, role  -> Role.USER);
-        actionToRoleMap.put(PermissionAction.PROMOTE, role -> Role.ADMIN);
-        actionToRoleMap.put(PermissionAction.LOGOUT, role  -> { throw new UserLoggedOutException(); });
-        actionToRoleMap.put(PermissionAction.REVOKE, role  -> { throw new UserRevokedException(); });
+        permissionActionMap.put(PermissionAction.PROMOTE, u -> u.setRole(Role.ADMIN));
+        permissionActionMap.put(PermissionAction.DEMOTE, u -> u.setRole(Role.USER));
+        permissionActionMap.put(PermissionAction.LOGOUT, u -> u.setLoggedIn(false));
+        permissionActionMap.put(PermissionAction.REVOKE, u -> u.setRevoked(true));
+        permissionActionMap.put(PermissionAction.CLEAR, u -> u.clear());
     }
 
 }
