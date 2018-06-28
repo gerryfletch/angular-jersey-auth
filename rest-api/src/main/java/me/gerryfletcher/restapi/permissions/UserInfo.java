@@ -3,6 +3,9 @@ package me.gerryfletcher.restapi.permissions;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import me.gerryfletcher.restapi.authentication.Role;
 
+/**
+ * WIP. A different permission system.
+ */
 public class UserInfo {
     private String username;
     private boolean loggedIn = true;
