@@ -8,10 +8,8 @@ import me.gerryfletcher.restapi.authentication.UserSecurityContext;
 import me.gerryfletcher.restapi.config.Secured;
 import me.gerryfletcher.restapi.exceptions.InvalidLoginException;
 import me.gerryfletcher.restapi.models.AuthTokens;
-import me.gerryfletcher.restapi.models.User;
 import me.gerryfletcher.restapi.permissions.PermissionAction;
 import me.gerryfletcher.restapi.permissions.PermissionService;
-import me.gerryfletcher.restapi.permissions.UserPermissions;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
@@ -19,7 +17,6 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Date;
 
 @Path("auth")
 public class AuthenticationResource {
@@ -57,9 +54,8 @@ public class AuthenticationResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response refreshAccessToken(@Context ContainerRequestContext cont) {
         UserSecurityContext context = (UserSecurityContext) cont.getSecurityContext();
-        User user = context.getUserPrincipal();
 
-        String accessToken = authService.refreshAccessToken(user.getName(), user.getRole(), context.getToken());
+        String accessToken = authService.refreshAccessToken(context.getToken());
         String accessTokenResponse = gson.toJson(formAccessTokenResponse(accessToken));
 
         return Response.ok().entity(accessTokenResponse).build();
@@ -85,7 +81,7 @@ public class AuthenticationResource {
     @Secured({Role.ADMIN})
     @POST
     public void revokeUser(@PathParam("user") String user) {
-        this.setUserPermissions(user, PermissionAction.REVOKE);
+        this.addUserPermission(user, PermissionAction.REVOKE);
     }
 
     /**
@@ -95,7 +91,7 @@ public class AuthenticationResource {
     @Secured({Role.ADMIN})
     @POST
     public void clearUser(@PathParam("user") String user) {
-        this.setUserPermissions(user, PermissionAction.CLEAR);
+        this.addUserPermission(user, PermissionAction.CLEAR);
     }
 
     /**
@@ -105,7 +101,7 @@ public class AuthenticationResource {
     @Secured({Role.ADMIN})
     @POST
     public void logoutUser(@PathParam("user") String user) {
-        this.setUserPermissions(user, PermissionAction.LOGOUT);
+        this.addUserPermission(user, PermissionAction.LOGOUT);
     }
 
     /**
@@ -115,7 +111,7 @@ public class AuthenticationResource {
     @Secured({Role.ADMIN})
     @POST
     public void promoteUser(@PathParam("user") String user) {
-        this.setUserPermissions(user, PermissionAction.PROMOTE);
+        this.addUserPermission(user, PermissionAction.PROMOTE);
     }
 
     /**
@@ -125,11 +121,11 @@ public class AuthenticationResource {
     @Secured({Role.ADMIN})
     @POST
     public void demoteUser(@PathParam("user") String user) {
-        this.setUserPermissions(user, PermissionAction.DEMOTE);
+        this.addUserPermission(user, PermissionAction.DEMOTE);
     }
 
-    private void setUserPermissions(String username, PermissionAction action) {
-        this.permissionService.putUserPermission(new UserPermissions(username, action, new Date()));
+    private void addUserPermission(String username, PermissionAction action) {
+        this.permissionService.addUserPermission(username, action);
     }
 
 }
