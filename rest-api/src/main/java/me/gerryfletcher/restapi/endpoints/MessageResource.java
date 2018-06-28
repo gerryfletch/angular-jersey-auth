@@ -3,18 +3,20 @@ package me.gerryfletcher.restapi.endpoints;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import me.gerryfletcher.restapi.authentication.Role;
+import me.gerryfletcher.restapi.config.Secured;
 
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("message")
 public class MessageResource {
 
+//    private static String publicMessage = "Hello, world.";
     private static String publicMessage = "Hello, world.";
-    private static String privateMessage = "You're a logged in user!";
+    private static String privateMessage = "You're a logged in user, accessing a private message.";
 
     private Gson gson;
 
@@ -26,8 +28,8 @@ public class MessageResource {
      * @return The public message to anyone who wants it.
      */
     @GET
-    @PermitAll
     @Path("public")
+    @Produces(MediaType.APPLICATION_JSON)
     public Response getPublicMessage() {
         return formMessageResponse(publicMessage);
     }
@@ -36,33 +38,13 @@ public class MessageResource {
      * @return The private message for logged in users only.
      */
     @GET
-    @RolesAllowed(Role.USER)
+    @Secured({Role.USER})
     @Path("private")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPrivateMessage() {
         return formMessageResponse(privateMessage);
     }
 
-    /**
-     * Update the public message. Only admins can do this.
-     *
-     * @param message The new message.
-     * @return 204 OK for a non-empty message, 400 bad request otherwise.
-     */
-    @PUT
-    @RolesAllowed(Role.ADMIN)
-    @Path("public")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response setPublicMessage(@QueryParam("message") String message) {
-        if (message == null || message.isEmpty()) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("You must specify a non-empty message.")
-                    .build();
-        }
-
-        publicMessage = message;
-        return Response.status(Response.Status.NO_CONTENT).build();
-    }
 
     private Response formMessageResponse(String message) {
         JsonObject response = new JsonObject();
