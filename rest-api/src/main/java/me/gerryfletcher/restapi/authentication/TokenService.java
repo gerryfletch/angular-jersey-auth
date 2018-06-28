@@ -40,7 +40,7 @@ class TokenService {
         try {
             return verifier.verify(token);
         } catch (JWTVerificationException exception) {
-            throw new AuthenticationException("Invalid token.");
+            throw new AuthenticationException("Your session has expired.");
         }
     }
 
