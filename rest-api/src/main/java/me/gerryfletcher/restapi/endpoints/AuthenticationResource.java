@@ -8,6 +8,7 @@ import me.gerryfletcher.restapi.authentication.UserSecurityContext;
 import me.gerryfletcher.restapi.config.Secured;
 import me.gerryfletcher.restapi.exceptions.InvalidLoginException;
 import me.gerryfletcher.restapi.models.AuthTokens;
+import me.gerryfletcher.restapi.permissions.UserPermission;
 import me.gerryfletcher.restapi.permissions.PermissionAction;
 import me.gerryfletcher.restapi.permissions.PermissionService;
 
@@ -81,7 +82,8 @@ public class AuthenticationResource {
     @Secured({Role.ADMIN})
     @POST
     public void revokeUser(@PathParam("user") String user) {
-        this.addUserPermission(user, PermissionAction.REVOKE);
+        UserPermission userPermission = new UserPermission(user, PermissionAction.REVOKE, "Example desc. User was disorderly.");
+        this.permissionService.addUserPermission(userPermission);
     }
 
     /**
@@ -125,7 +127,7 @@ public class AuthenticationResource {
     }
 
     private void addUserPermission(String username, PermissionAction action) {
-        this.permissionService.addUserPermission(username, action);
+        this.permissionService.addUserPermission(new UserPermission(username, action));
     }
 
 }
