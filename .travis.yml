@@ -4,11 +4,11 @@ node_js:
   - node
 
 before_script:
-  - npm install -g --silent @angular/cli
-  - npm install -g @angular-devkit/build-angular
+  - cd webapp
 
 script:
-  - cd webapp
+  - npm install -g --silent @angular/cli
+  - npm install -g @angular-devkit/build-angular
   - ng build --prod
 
 notifications:
