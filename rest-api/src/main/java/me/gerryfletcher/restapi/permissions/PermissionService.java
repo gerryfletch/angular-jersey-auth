@@ -10,35 +10,34 @@ import java.util.function.Function;
  */
 public class PermissionService {
 
-    private static Map<String, List<Permission>> userPermissionsMap = new HashMap<>();
+    private static Map<String, List<UserPermission>> userPermissionsMap = new HashMap<>();
     private static Map<PermissionAction, Function<UserInfo, UserInfo>> permissionActionMap = new HashMap<>();
 
     public PermissionService() {
         constructActionMap();
     }
 
-    public List<Permission> getUserPermissions(String username) {
+    public List<UserPermission> getUserPermissions(String username) {
         return userPermissionsMap.getOrDefault(username, new ArrayList<>());
     }
 
-    public void addUserPermission(String username, PermissionAction action) {
-        Permission permission = new Permission(action, new Date());
-        List<Permission> permissionList = userPermissionsMap.getOrDefault(username, new ArrayList<>());
-        permissionList.add(permission);
+    public void addUserPermission(UserPermission userPermission) {
+        List<UserPermission> userPermissionList = userPermissionsMap.getOrDefault(userPermission.getUsername(), new ArrayList<>());
+        userPermissionList.add(userPermission);
 
-        userPermissionsMap.put(username, permissionList);
+        userPermissionsMap.put(userPermission.getUsername(), userPermissionList);
     }
 
     public UserInfo updateUserPermissions(UserInfo userInfo) {
-        List<Permission> permissions = userPermissionsMap.getOrDefault(userInfo.getUsername(), new ArrayList<>());
-        if (permissions.isEmpty()) return userInfo;
+        List<UserPermission> userPermissions = userPermissionsMap.getOrDefault(userInfo.getUsername(), new ArrayList<>());
+        if (userPermissions.isEmpty()) return userInfo;
 
         Date tokenIssueDate = userInfo.getTokenIssueDate();
 
-        for (Permission permission : permissions) {
-            // If the permission was set on the account after the token was created, apply it to the user.
-            if (tokenIssueDate.before(permission.getIssuedAt())) {
-                PermissionAction action = permission.getAction();
+        for (UserPermission userPermission : userPermissions) {
+            // If the userPermission was set on the account after the token was created, apply it to the user.
+            if (tokenIssueDate.before(userPermission.getIssuedAt())) {
+                PermissionAction action = userPermission.getAction();
                 userInfo = permissionActionMap.get(action).apply(userInfo);
             }
         }
