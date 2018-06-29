@@ -21,7 +21,7 @@ public class UserInfo {
         this.tokenIssuedAt = token.getIssuedAt();
         return this;
     }
-    
+
     public UserInfo clear() {
         this.isLoggedIn = true;
         this.isRevoked = false;
