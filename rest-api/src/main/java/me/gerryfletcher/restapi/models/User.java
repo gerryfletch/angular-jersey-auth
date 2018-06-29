@@ -1,13 +1,15 @@
 package me.gerryfletcher.restapi.models;
 
+import me.gerryfletcher.restapi.authentication.Role;
+
 import java.security.Principal;
 
 public class User implements Principal {
 
     private String username;
-    private String role;
+    private Role role;
 
-    public User(String username, String role) {
+    public User(String username, Role role) {
         this.username = username;
         this.role = role;
     }
@@ -17,7 +19,7 @@ public class User implements Principal {
         return this.username;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return this.role;
     }
 

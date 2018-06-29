@@ -2,12 +2,10 @@ package me.gerryfletcher.restapi.authentication;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import me.gerryfletcher.restapi.exceptions.InvalidLoginException;
+import me.gerryfletcher.restapi.exceptions.permissions.UserLoggedOutException;
+import me.gerryfletcher.restapi.exceptions.permissions.UserRevokedException;
 import me.gerryfletcher.restapi.models.AuthTokens;
-import me.gerryfletcher.restapi.permissions.PermissionAction;
-import me.gerryfletcher.restapi.permissions.PermissionService;
-import me.gerryfletcher.restapi.permissions.UserPermissions;
-
-import java.util.Date;
+import me.gerryfletcher.restapi.permissions.*;
 
 public class AuthenticationService {
 
@@ -44,21 +42,14 @@ public class AuthenticationService {
      *
      * @return A new access token with the users details.
      */
-    public String refreshAccessToken(String username, String role, DecodedJWT token) {
-        UserPermissions userPermissions = permissionService.getUserPermissions(username);
-        Date permissionDate = userPermissions.issuedAt();
+    public String refreshAccessToken(DecodedJWT token) {
+        UserInfo userInfo = new UserInfo().fromAccessToken(token);
+        userInfo = permissionService.updateUserPermissions(userInfo);
 
-        // The permissions have been updated since the token was issued
-        if (permissionDate.after(token.getIssuedAt())) {
-            PermissionAction action = userPermissions.getAction();
-            if (action == PermissionAction.CLEAR) {
-                this.permissionService.clearUserPermission(username);
-            } else {
-                role = this.permissionService.getRoleFromAction(role, action);
-            }
-        }
+        if (! userInfo.isLoggedIn()) throw new UserLoggedOutException();
+        if (userInfo.isRevoked()) throw new UserRevokedException();
 
-        return tokenService.createAccessToken(username, role);
+        return tokenService.createAccessToken(userInfo.getUsername(), userInfo.getRole());
     }
 
 }
