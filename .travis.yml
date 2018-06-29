@@ -19,7 +19,7 @@ script:
   - npm install -g --silent @angular/cli
   - npm install -g @angular-devkit/build-angular
   - npm link
-  - ng test
+  - ng test --watch false
   - ng build --prod
 
 notifications:
