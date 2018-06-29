@@ -1,0 +1,16 @@
+language: node_js
+
+node_js:
+  - node
+
+before_script:
+  - npm install -g --silent @angular/cli
+
+script:
+  - cd webapp
+  - ng build --prod
+
+notifications:
+  - email:
+    on_failure: change
+    on_success: change
