@@ -5,7 +5,7 @@ node_js:
 
 sudo: required
 addons:
-  chrome: stable --no-sandbox
+  chrome: stable
 
 before_script:
   - cd webapp
