@@ -2,19 +2,25 @@ package me.gerryfletcher.restapi.permissions;
 
 import java.util.Date;
 
-public class Permission {
+public class UserPermission {
+    private String username;
     private PermissionAction action;
     private Date issuedAt;
     private String description;
 
-    public Permission(PermissionAction action, Date issuedAt) {
+    public UserPermission(String username, PermissionAction action) {
+        this.username = username;
         this.action = action;
-        this.issuedAt = issuedAt;
+        this.issuedAt = new Date();
     }
 
-    public Permission(PermissionAction action, Date issuedAt, String description) {
-        this(action, issuedAt);
+    public UserPermission(String username, PermissionAction action, String description) {
+        this(username, action);
         this.description = description;
+    }
+
+    public String getUsername() {
+        return this.username;
     }
 
     public PermissionAction getAction() {
