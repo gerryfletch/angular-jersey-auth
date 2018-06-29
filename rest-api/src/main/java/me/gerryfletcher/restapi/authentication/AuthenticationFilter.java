@@ -1,20 +1,22 @@
 package me.gerryfletcher.restapi.authentication;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import me.gerryfletcher.restapi.config.Secured;
 import me.gerryfletcher.restapi.exceptions.AuthenticationException;
 import me.gerryfletcher.restapi.models.User;
 
 import javax.annotation.Priority;
-import javax.annotation.security.DenyAll;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Priority(Priorities.AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
@@ -34,13 +36,14 @@ public class AuthenticationFilter implements ContainerRequestFilter {
      */
     @Override
     public void filter(ContainerRequestContext requestContext) {
+        Class<?> resourceClass = resourceInfo.getResourceClass();
+        List<Role> classRoles = extractRoles(resourceClass);
 
         Method method = this.resourceInfo.getResourceMethod();
+        List<Role> methodRoles = extractRoles(method);
 
-        if (method.isAnnotationPresent(PermitAll.class)) {
-            return;
-        } else if (method.isAnnotationPresent(DenyAll.class)) {
-            forbidden(requestContext);
+        // Permit all users.
+        if (classRoles.isEmpty() && methodRoles.isEmpty()) {
             return;
         }
 
@@ -49,18 +52,24 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
         try {
             token = tokenService.getDecodedJWT(getToken(auth));
-        } catch (AuthenticationException e) {
+        } catch (Exception e) {
             unauthorized(requestContext, e.getMessage());
             return;
         }
 
+        // Gather security context data.
         String scheme = requestContext.getUriInfo().getRequestUri().getScheme();
         String username = token.getClaim("username").asString();
-        String role = token.getClaim("role").asString();
+        Role role = Role.valueOf(token.getClaim("role").asString());
 
-        if (!tokenIsValidRole(role, method.getAnnotation(RolesAllowed.class).value())) {
+        try {
+            if (methodRoles.isEmpty()) {
+                isRoleValid(role, classRoles);
+            } else {
+                isRoleValid(role, methodRoles);
+            }
+        } catch (AuthenticationException e) {
             forbidden(requestContext);
-            return;
         }
 
         User user = new User(username, role);
@@ -84,12 +93,24 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         return authHeader.split(" ")[1];
     }
 
-    /**
-     * @return True if a tokens role is permitted.
-     */
-    private boolean tokenIsValidRole(String userRole, String[] permittedRoles) {
-        for (String role : permittedRoles) if (role.equals(userRole)) return true;
-        return false;
+    private void isRoleValid(Role role, List<Role> permittedRoles) throws AuthenticationException {
+        if (! permittedRoles.contains(role)) {
+            throw new AuthenticationException("You don't have permission for this resource.");
+        }
+    }
+
+    private List<Role> extractRoles(AnnotatedElement annotatedElement) {
+        if (annotatedElement == null) {
+            return new ArrayList<>();
+        } else {
+            Secured secured = annotatedElement.getAnnotation(Secured.class);
+            if (secured == null) {
+                return new ArrayList<>();
+            } else {
+                Role[] allowedRoles = secured.value();
+                return Arrays.asList(allowedRoles);
+            }
+        }
     }
 
     /**

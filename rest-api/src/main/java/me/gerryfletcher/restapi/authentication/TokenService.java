@@ -13,7 +13,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-public class TokenService {
+class TokenService {
 
     private static final String secret = "test_secret";
     private static Algorithm algorithm;
@@ -40,7 +40,7 @@ public class TokenService {
         try {
             return verifier.verify(token);
         } catch (JWTVerificationException exception) {
-            throw new AuthenticationException("Invalid token.");
+            throw new AuthenticationException("Your session has expired.");
         }
     }
 
@@ -50,13 +50,13 @@ public class TokenService {
      * @return  A valid access token.
      * @throws JWTCreationException If the signature configuration is invalid.
      */
-    String createAccessToken(String username, String role) throws JWTCreationException {
+    String createAccessToken(String username, Role role) throws JWTCreationException {
         return JWT.create()
                 .withIssuer("auth0")
-                .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(3)))
+                .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(7)))
                 .withIssuedAt(new Date())
                 .withClaim("username", username)
-                .withClaim("role", role)
+                .withClaim("role", role.name())
                 .sign(algorithm);
     }
 
@@ -67,17 +67,17 @@ public class TokenService {
      * @return A valid refresh token.
      * @throws JWTCreationException If the signature configuration is invalid.
      */
-    String createRefreshToken(String username) throws JWTCreationException {
+    private String createRefreshToken(String username) throws JWTCreationException {
         return JWT.create()
                 .withIssuer("auth0")
                 .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365)))
                 .withIssuedAt(new Date())
                 .withClaim("username", username)
-                .withClaim("role", Role.REFRESH)
+                .withClaim("role", Role.REFRESH.name())
                 .sign(algorithm);
     }
 
-    AuthTokens createAuthTokens(String username, String role) throws JWTCreationException {
+    AuthTokens createAuthTokens(String username, Role role) throws JWTCreationException {
         String accessToken = createAccessToken(username, role);
         String refreshToken = createRefreshToken(username);
         return new AuthTokens(refreshToken, accessToken);
