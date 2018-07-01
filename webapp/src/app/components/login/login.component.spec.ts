@@ -225,11 +225,11 @@ describe('LoginComponent', () => {
         });
       });
 
-      describe('With incorrect credentials', () => {
+      fdescribe('With incorrect credentials', () => {
         // Unit
         it('should error', () => {
           const error = 'Bad username or password.';
-          spyOn(TestBed.get(AuthenticationService), 'login').and.returnValue(throwError(error));
+          spyOn(TestBed.get(AuthenticationService), 'login').and.returnValue(throwError({message: error}));
           component.username = 'test';
           component.password = 'testing';
 
@@ -241,7 +241,7 @@ describe('LoginComponent', () => {
         // Integration
         it('should show an error', () => {
           const error = 'Bad username or password.';
-          spyOn(TestBed.get(AuthenticationService), 'login').and.returnValue(throwError(error));
+          spyOn(TestBed.get(AuthenticationService), 'login').and.returnValue(throwError({message: error}));
           usernameInput.value = 'test';
           passwordInput.value = 'testing';
 
