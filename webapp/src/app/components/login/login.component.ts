@@ -1,5 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {AuthenticationService} from '../../_services/authentication.service';
+import {HttpErrorResponse} from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -46,9 +47,9 @@ export class LoginComponent implements OnInit {
           this.error = '';
           this.isLogged = true;
         },
-        error => {
+        (error: HttpErrorResponse) => {
           this.isError = true;
-          this.error = error;
+          this.error = error.message;
         }
       );
   }
