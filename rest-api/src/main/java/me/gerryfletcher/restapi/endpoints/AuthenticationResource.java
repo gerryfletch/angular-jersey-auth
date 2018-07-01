@@ -39,6 +39,7 @@ public class AuthenticationResource {
     @POST
     @Path("login")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response login(@NotNull @FormParam("username") String username, @NotNull @FormParam("password") String password) {
         AuthTokens authTokens = authService.login(username, password);
         return Response.ok().entity(gson.toJson(formResponse(authTokens))).build();
