@@ -45,7 +45,7 @@ export class AuthenticationService {
   }
 
   private handleLoginError(error: HttpErrorResponse) {
-    return throwError(error.error || 'There\'s something wrong with our servers.');
+    return throwError(error.statusText || 'There\'s something wrong with our servers.');
   }
 
   logout() {
